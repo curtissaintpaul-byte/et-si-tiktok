@@ -12,6 +12,7 @@ cd studio && npm install && pip install --quiet --break-system-packages numpy sc
 Chromium est déjà installé (PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers, playwright 1.56.0). ffmpeg aussi.
 
 ## 1. Choisir l'idée
+Règle de Curtis pour les idées : surtout des questions que tout le monde peut se poser, intéressantes et variées, pas que l'espace (au maximum une idée « espace » sur trois). Exemples : « Et si les dinosaures existaient de nos jours ? », « Et si tu conduisais une F1 comme un pilote ? », « Et si tu étais l'homme le plus riche du monde ? ».
 Dans Notion, prendre la ligne au statut « 👍 Validée » la plus ancienne. La passer en « 🎬 En fabrication ».
 
 ## 2. Vérifier les faits AVANT d'écrire la scène
@@ -48,7 +49,7 @@ volume ≈ −16 LUFS (`ffmpeg -i … -af ebur128 -f null -`) ; regarder `studio
    `text` = légende complète + hashtags, `tiktokData: { title: <la question + emoji>, privacyOption: "PUBLIC_TO_EVERYONE", isAigc: true, disableComment: false, disableDuet: false, disableStitch: false, autoAddMusic: false, commercialContentThirdParty: false, commercialContentOwnBrand: false }`.
 
 ## 7. La légende
-La question + emoji, 3 à 5 faits simples (phrases courtes, vocabulaire courant), « Sources : … », puis 5 hashtags (`#etsi #science` + 2 du thème + `#apprendresurtiktok`).
+La question + emoji, 3 à 5 faits simples (phrases courtes, vocabulaire courant), « Sources : … », puis 5 hashtags (`#etsi` + 3 du thème + `#apprendresurtiktok`).
 Ton simple et naturel. **Jamais de tirets pour enchaîner les idées**, rien qui sonne IA ou « vendeur ».
 
 ## 8. Mettre Notion à jour
