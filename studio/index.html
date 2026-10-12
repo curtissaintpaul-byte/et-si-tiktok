@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Studio Et si</title>
+<style>
+  @font-face { font-family: 'Garamond'; src: url('node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; }
+  @font-face { font-family: 'Garamond'; src: url('node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-500-normal.woff2') format('woff2'); font-weight: 500; font-style: normal; }
+  @font-face { font-family: 'Garamond'; src: url('node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; }
+  @font-face { font-family: 'Inter'; src: url('node_modules/@fontsource/inter/files/inter-latin-500-normal.woff2') format('woff2'); font-weight: 500; }
+  @font-face { font-family: 'Inter'; src: url('node_modules/@fontsource/inter/files/inter-latin-600-normal.woff2') format('woff2'); font-weight: 600; }
+  @font-face { font-family: 'Inter'; src: url('node_modules/@fontsource/inter/files/inter-latin-800-normal.woff2') format('woff2'); font-weight: 800; }
+
+  html, body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  #c { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+  /* calques : "scene" = la 3D seule ; "hud" = les textes seuls sur fond transparent */
+  body.layer-scene #overlay { display: none; }
+  body.layer-hud, body.layer-hud #stage { background: transparent; }
+  body.layer-hud #c { display: none; }
+
+  #overlay { position: absolute; inset: 0; pointer-events: none; }
+  #shade { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.42) 0px, rgba(0,0,0,.18) 380px, rgba(0,0,0,0) 640px), radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 55%, rgba(0,0,0,.28) 100%); }
+  #frostlens { position: absolute; inset: 0; width: 1080px; height: 1920px; opacity: 0; filter: blur(0.7px); }
+  #hud { position: absolute; inset: 0; color: #fff; }
+
+  .lbl { font-family: 'Inter'; font-weight: 600; font-size: 19px; letter-spacing: 0.22em; opacity: 0.88; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+  .val { font-family: 'Garamond'; font-weight: 500; font-size: 64px; line-height: 1.05; margin-top: 2px; transform-origin: 0 60%; display: inline-block; text-shadow: 0 2px 14px rgba(0,0,0,.45); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sub { font-family: 'Inter'; font-weight: 500; font-size: 17px; letter-spacing: 0.2em; opacity: 0.72; margin-top: 4px; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+  #tl { position: absolute; left: 62px; top: 190px; }
+  #tl .block + .block { margin-top: 30px; }
+  #tr { position: absolute; right: 62px; top: 196px; text-align: right; }
+  .live { font-family: 'Inter'; font-weight: 600; font-size: 19px; letter-spacing: 0.2em; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+  .dot { display: inline-block; width: 13px; height: 13px; border-radius: 50%; background: #ff3b30; margin-right: 10px; vertical-align: 1px; box-shadow: 0 0 10px rgba(255,59,48,.8); }
+
+  #hook { position: absolute; left: 40px; right: 120px; top: 470px; text-align: center; font-family: 'Inter'; font-weight: 800; font-size: 76px; line-height: 1.12; letter-spacing: -0.01em; opacity: 0;
+          text-shadow: 0 0 2px rgba(0,0,0,.9), 0 3px 18px rgba(0,0,0,.55); }
+  #hook em { font-style: normal; color: var(--accent, #ffcf6b); }
+  /* zone sûre TikTok : on évite la colonne d'icônes à droite et la légende en bas */
+  #subt { position: absolute; left: 90px; right: 190px; top: 1160px; text-align: center; font-family: 'Garamond'; font-style: italic; font-size: 64px; line-height: 1.12;
+          transform-origin: 50% 50%; text-shadow: 0 2px 18px rgba(0,0,0,.85), 0 0 4px rgba(0,0,0,.7); }
+
+  .reticle { position: absolute; opacity: 0; }
+  .reticle .c { position: absolute; width: 22px; height: 22px; border: 0 solid rgba(255,255,255,.9); }
+  .reticle .tl { left: 0; top: 0; border-left-width: 3px; border-top-width: 3px; }
+  .reticle .tr { right: 0; top: 0; border-right-width: 3px; border-top-width: 3px; }
+  .reticle .bl { left: 0; bottom: 0; border-left-width: 3px; border-bottom-width: 3px; }
+  .reticle .br { right: 0; bottom: 0; border-right-width: 3px; border-bottom-width: 3px; }
+  .reticle span { position: absolute; left: 0; white-space: nowrap; font-family: 'Inter'; font-weight: 600; font-size: 17px; letter-spacing: .2em; opacity: .9; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
+  #fade { position: absolute; inset: 0; background: #000; opacity: 0; }
+  #end { position: absolute; inset: 0; background: #0d0e12; opacity: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 150px 0 70px; }
+  #end .kicker { font-family: 'Inter'; font-weight: 600; font-size: 20px; letter-spacing: .22em; opacity: .5; margin-bottom: 34px; text-align: center; color: #f1ede4; }
+  #end .q { font-family: 'Garamond'; font-size: 70px; color: #f1ede4; text-align: center; line-height: 1.15; }
+  #end .sub { margin-top: 40px; opacity: 0; font-size: 20px; color: #f1ede4; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="overlay">
+    <div id="shade"></div>
+    <canvas id="frostlens" width="1080" height="1920"></canvas>
+    <div id="hud">
+      <div id="tl">
+        <div class="block"><div class="lbl" id="l1"></div><div class="val" id="v1"></div><div class="sub" id="s1"></div></div>
+        <div class="block" id="b2"><div class="lbl" id="l2"></div><div class="val" id="v2"></div><div class="sub" id="s2"></div></div>
+      </div>
+      <div id="tr">
+        <div class="live"><span class="dot" id="dot"></span>LIVE</div>
+        <div class="sub" id="tr1"></div>
+        <div class="sub" id="tr2"></div>
+      </div>
+      <div id="reticles"></div>
+      <div id="hook"></div>
+      <div id="subt"></div>
+      <div id="flash"></div>
+      <div id="fade"></div>
+      <div id="end"><div class="kicker" id="kicker"></div><div class="q" id="q"></div><div class="sub" id="cta"></div></div>
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { run } from './engine.js';
+  run();
+</script>
+</body>
+</html>
