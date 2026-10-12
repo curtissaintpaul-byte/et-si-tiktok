@@ -26,6 +26,13 @@ S'inspirer de l'épisode existant le plus proche (même genre de décor) et gard
   Règle d'or : tout est une fonction du temps t (même t = même image).
 - Structure : 0-3 s question · 3-15 s vie normale et échelle · ~15 s l'événement · 15-55 s une conséquence toutes les ~5 s · ~55 s retour au réel · 4 dernières s écran noir + question pour les commentaires.
 - `insets.js` : vignettes (autre ville, archive, schéma) quand un sous-titre parle d'un ailleurs (voir `lib-insets.js`), puis `python3 hookinsets.py <code>`.
+- **Arrêt sur image** (dès qu'on parle du corps, 1 ou 2 fois par vidéo, au moment fort) : `lib-freeze.js` (mode d'emploi en tête du fichier).
+  L'image se fige 4 à 5 s, se désature, et 2 à 4 étiquettes s'accrochent au corps du personnage (COU, YEUX, CŒUR, PEAU…), une par une,
+  couleur = niveau de risque (`ok` vert, `bof` jaune, `mal` orange, `grave` rouge), chacune avec un fait vrai et court.
+  Le personnage doit être assez près de la caméra fixe pour qu'on voie bien son corps.
+  À ne pas oublier : `T.duration += FZ.total`, `SUBS_V = FZ.subs(SUBS)` pour les sous-titres, `HUD.end(t, FZ.realT(T.endCard), …)`,
+  `const ts = FZ.sceneT(t)` pour tout le décor et les compteurs, `FZ.draw(t, camera)` à la fin d'update, `freezes: FZ.events()` dans events(),
+  et dans audio.py `freeze_sfx(S, sfx, e['t'], e['dur'])` pour chaque arrêt.
 - `audio.py` : bande-son 100 % synthétisée avec `snd.py` (ambiance du lieu, bruitages calés sur les événements, musique qui monte), master vers −15/−16 LUFS.
 
 ## 4. Tester avant de tout rendre

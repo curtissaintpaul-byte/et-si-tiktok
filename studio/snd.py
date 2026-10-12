@@ -135,3 +135,13 @@ def master(buses_gains, out_path, target=-19.0, lev=True):
     out = [round(20 * np.log10(np.sqrt((mix[k * SR:(k + 1) * SR] ** 2).mean()) + 1e-9)) for k in range(len(mix) // SR)]
     print('niveaux par seconde (dB):', out)
     print('ok', out_path)
+
+
+def freeze_sfx(S, bus, at, dur, gain=1.0):
+    """« Arrêt sur image » : un déclic d'obturateur, puis une note grave tenue pendant l'arrêt (at, dur : temps vidéo, cf. lib-freeze.js)."""
+    tt, n = S.burst(0.06)
+    bus.put(hp(S.noise(n) * np.exp(-tt * 90), 1500), 0, at, 0.35 * gain)
+    tt, n = S.burst(dur)
+    env = np.clip(tt / 0.3, 0, 1) * np.clip((dur - tt) / 0.4, 0, 1)
+    drone = np.sin(2 * np.pi * 110 * tt) + 0.5 * np.sin(2 * np.pi * 165 * tt) + 0.25 * np.sin(2 * np.pi * 220.5 * tt)
+    bus.put(drone * env, 0, at, 0.05 * gain)
