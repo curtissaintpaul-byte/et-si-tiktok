@@ -473,7 +473,7 @@ export const HUD = {
   },
   end(t, t0, { kicker, q, cta }) {
     const e = this.el;
-    if (e.q.dataset.v !== q) { e.kicker.textContent = kicker; e.q.innerHTML = q; e.cta.textContent = cta; e.q.dataset.v = q; }
+    if (e.q.dataset.v !== q) { e.kicker.textContent = kicker; e.q.innerHTML = q.replace(/ ([?!:])/g, '&#8239;$1'); e.cta.textContent = cta; e.q.dataset.v = q; }   // (le « ? » ne part jamais seul à la ligne)
     e.end.style.opacity = sm(t0, t0 + 0.45, t); e.cta.style.opacity = sm(t0 + 1.0, t0 + 1.5, t);
   },
   fade(v) { this.el.fade.style.opacity = v; },

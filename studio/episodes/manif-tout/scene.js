@@ -59,5 +59,5 @@ export default () => buildHistoire({
     { pt: 'chest', title: 'TON SALAIRE', lines: ['le minimum a pris +35 %', 'd’un coup en 1968'], risk: 'info', side: 'left', dy: -40 },
     { pt: 'rHand', title: 'TON PLEIN', lines: ['50 L de gazole : 118 €,', 'dont 50 € de taxes'], risk: 'info', side: 'right', dy: 60 },
     { pt: 'lKnee', title: 'LA FACTURE', lines: ['environ 10 milliards en 2018,', 'payés par l’argent public'], risk: 'info', side: 'left', dy: 30 } ] },
-  end: { kicker: 'SOURCES : ACCORDS DE MATIGNON ET DE GRENELLE · BANQUE DES TERRITOIRES · LA FINANCE POUR TOUS · SELECTRA · PRIX-CARBURANTS.GOUV.FR', q: 'Et toi, samedi,<br>tu voudrais que ça change quoi ?', cta: 'RÉPONDS EN COMMENTAIRE' },
+  end: { kicker: 'SOURCES : ACCORDS DE MATIGNON ET DE GRENELLE · BANQUE DES TERRITOIRES · LA FINANCE POUR TOUS · SELECTRA · PRIX-CARBURANTS.GOUV.FR', q: 'Et toi, samedi,<br>tu voudrais que<br>ça change quoi ?', cta: 'RÉPONDS EN COMMENTAIRE' },
 });
