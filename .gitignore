@@ -2,3 +2,4 @@ studio/node_modules/
 studio/work/
 studio/out/
 __pycache__/
+studio/models/

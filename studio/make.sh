@@ -6,6 +6,7 @@ cd "$(dirname "$0")"
 EP=$1; FPS=${2:-30}
 [ -d node_modules/three ] || npm install --silent
 python3 -c "import numpy, scipy" 2>/dev/null || pip install --quiet --break-system-packages numpy scipy
+./get-models.sh > /dev/null
 mkdir -p work out
 curl -s -o /dev/null http://localhost:8124/index.html || { setsid nohup python3 -m http.server 8124 --directory . > work/http.log 2>&1 < /dev/null & sleep 2; }
 node capture.mjs "$EP" "work/frames-$EP" "$FPS"
