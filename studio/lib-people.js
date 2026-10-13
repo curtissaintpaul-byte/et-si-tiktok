@@ -11,8 +11,10 @@
 //  const PEOPLE = await loadPeople(renderer);
 //  const P = PEOPLE.make({ outfit: 3 });  scene.add(P.root);  P.root.position.set(x, 0, z);
 //  dans update(t) :  P.stand();  ou  P.walk(t * 6);  P.run(ph);  P.sit(k);  P.armsUp(k);  P.do(spec…)  (une seule par image)
-//  P.point('neck') → position 3D (pour les étiquettes de l'arrêt sur image : head, eyes, neck, chest, heart, belly,
-//                    lHand, rHand, lArm, rArm, lKnee, rKnee, lFoot, rFoot)
+//  P.point('neck') → position 3D (pour les étiquettes de l'arrêt sur image : head, eyes, nose, mouth, ear, neck, throat,
+//                    chest, lungs, heart, belly, lHand, rHand, lArm, rArm, lKnee, rKnee, lFoot, rFoot)
+//  P.attach(objet, 'eyes') : accroche des lunettes, un masque… qui suivent la tête
+//  Policiers : loadPolice() plus bas
 //  P.fade(a), P.pop(k) (apparition avec un petit rebond)
 //  Pour une foule : voir lib-multiply.js (vrais personnages devant, « photos découpées » au loin)
 // =====================================================================
@@ -23,7 +25,8 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 const AX = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
 const ORDER = ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand',
   'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'RightUpLeg', 'RightLeg', 'RightFoot'];
-const PTS = { head: ['Head', 0.1, 0.02], eyes: ['Head', 0.07, 0.09], neck: ['Neck', 0.03, 0.02], chest: ['Spine2', 0.05, 0.1], heart: ['Spine2', 0.03, 0.1, 0.05], belly: ['Spine', 0.02, 0.11],
+const PTS = { head: ['Head', 0.1, 0.02], eyes: ['Head', 0.07, 0.09], nose: ['Head', 0.035, 0.11], mouth: ['Head', 0.0, 0.1], ear: ['Head', 0.06, 0.0, 0.075], neck: ['Neck', 0.03, 0.02], throat: ['Neck', 0.02, 0.07],
+  chest: ['Spine2', 0.05, 0.1], lungs: ['Spine2', 0.06, 0.1, -0.07], heart: ['Spine2', 0.03, 0.1, 0.05], belly: ['Spine', 0.02, 0.11],
   lHand: ['LeftHand', 0, 0], rHand: ['RightHand', 0, 0], lArm: ['LeftForeArm', 0, 0], rArm: ['RightForeArm', 0, 0], lKnee: ['LeftLeg', 0, 0.05], rKnee: ['RightLeg', 0, 0.05], lFoot: ['LeftFoot', 0, 0.06], rFoot: ['RightFoot', 0, 0.06] };
 // les tenues : [pantalon, peau, haut] (null = couleur d'origine)
 const DENIM = [0.22, 0.32, 0.55], BLACK = [0.15, 0.15, 0.17], BEIGE = [0.62, 0.55, 0.42], KHAKI = [0.38, 0.4, 0.3];
@@ -31,7 +34,7 @@ const LIGHT = [0.93, 0.76, 0.64], MED = [0.8, 0.6, 0.45], TAN = [0.66, 0.46, 0.3
 const WHITE = [0.86, 0.86, 0.84], NAVY = [0.2, 0.25, 0.4], BURG = [0.5, 0.18, 0.2], GREEN = [0.3, 0.42, 0.33];
 export const OUTFITS = [[DENIM, null, null], [BLACK, LIGHT, WHITE], [BEIGE, MED, NAVY], [DENIM, LIGHT, BURG], [KHAKI, TAN, null], [BLACK, MED, GREEN], [null, LIGHT, NAVY], [DENIM, TAN, WHITE]];
 
-export async function loadPeople(renderer, url = 'models/Michelle.glb') {
+export async function loadPeople(renderer, url = 'models/Michelle.glb', { extra = [] } = {}) {   // extra : des tenues en plus (ex. gilet jaune), numérotées après les 8
   const gl = await new GLTFLoader().loadAsync(url);
   let mat0; gl.scene.traverse((o) => { if (o.isMesh) mat0 = o.material; });
   // --- les 8 textures
@@ -51,7 +54,7 @@ export async function loadPeople(renderer, url = 'models/Michelle.glb') {
     const c2 = document.createElement('canvas'); c2.width = cv.width; c2.height = cv.height; c2.getContext('2d').putImageData(d, 0, 0);
     const tx = new THREE.CanvasTexture(c2); tx.flipY = false; tx.colorSpace = THREE.SRGBColorSpace; return tx;
   };
-  const MAPS = OUTFITS.map(paint);
+  const ALL = [...OUTFITS, ...extra], MAPS = ALL.map(paint);
   const hb = new THREE.Box3().setFromObject(gl.scene), H0 = hb.max.y - hb.min.y;
 
   function make({ outfit = 0, height = 1.65, shadows = true } = {}) {
@@ -105,6 +108,16 @@ export async function loadPeople(renderer, url = 'models/Michelle.glb') {
       const q = root.getWorldQuaternion(new THREE.Quaternion()), s = height / 1.65;
       return p.add(v3.set(side * s, up * s, fw * s).applyQuaternion(q));
     };
+    /** accroche un objet (lunettes, masque…) sur une partie du corps : il suit l'os, orienté comme le personnage (regard vers +Z) */
+    P.attach = (obj, name, { dx = 0, dy = 0, dz = 0 } = {}) => {
+      const [bn, up = 0, fw = 0, side = 0] = PTS[name] || [name]; P.stand(); root.updateMatrixWorld(true);
+      const b = B[bn] || body.getObjectByName('mixamorig' + bn), s = height / 1.65;
+      const rq = root.getWorldQuaternion(new THREE.Quaternion());
+      const wp = b.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3((side + dx) * s, (up + dy) * s, (fw + dz) * s).applyQuaternion(rq));
+      const bq = b.getWorldQuaternion(new THREE.Quaternion()), bs = b.getWorldScale(new THREE.Vector3());
+      b.add(obj); obj.position.copy(b.worldToLocal(wp)); obj.quaternion.copy(bq.invert().multiply(rq)); obj.scale.setScalar(s / bs.x);
+      return obj;
+    };
     P.fade = (a) => { root.visible = a > 0.01; for (const m of mats) { m.opacity = a; m.transparent = a < 0.999; m.depthWrite = a > 0.5; } };
     P.pop = (k) => { const c = 1.7, m = Math.min(1, Math.max(0, k)) - 1; const s = k <= 0 ? 0 : 1 + (c + 1) * m * m * m + c * m * m; root.visible = k > 0; inner.scale.setScalar(Math.max(1e-4, s)); };
     P.stand();
@@ -112,7 +125,7 @@ export async function loadPeople(renderer, url = 'models/Michelle.glb') {
   }
 
   /** l'atlas des « photos découpées » pour les foules : 8 tenues vues d'un peu haut, une case chacune (4 × 2) */
-  function atlas(elevDeg = 30, CW = 128, CH = 256) {
+  function atlas(elevDeg = 30, CW = 128, CH = 256, cells = [0, 1, 2, 3, 4, 5, 6, 7]) {   // cells : quelle tenue dans chaque case
     const rt = new THREE.WebGLRenderTarget(CW * 4, CH * 2, { type: THREE.HalfFloatType });
     const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#c6d4f0', '#2a241e', 1.1));
     const kl = new THREE.DirectionalLight('#fff0d6', 2.6); kl.position.set(3, 8, 6); sc.add(kl);
@@ -120,7 +133,7 @@ export async function loadPeople(renderer, url = 'models/Michelle.glb') {
     const prevVP = new THREE.Vector4(); renderer.getViewport(prevVP);
     renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.setScissorTest(true);
     for (let i = 0; i < 8; i++) {
-      const p = make({ outfit: i, shadows: false }); p.stand(i * 0.03); p.root.rotation.y = [0, 0.5, -0.5, 0.25][i % 4]; sc.add(p.root);
+      const p = make({ outfit: cells[i], shadows: false }); p.stand(i * 0.03); p.root.rotation.y = [0, 0.5, -0.5, 0.25][i % 4]; sc.add(p.root);
       oc.position.set(0, 0.85 + Math.sin(e) * 6, Math.cos(e) * 6); oc.lookAt(0, 0.85, 0); oc.updateMatrixWorld();
       const cx = (i % 4) * CW, cy = Math.floor(i / 4) * CH; renderer.setViewport(cx, cy, CW, CH); renderer.setScissor(cx, cy, CW, CH);
       renderer.render(sc, oc); sc.remove(p.root);
@@ -128,5 +141,29 @@ export async function loadPeople(renderer, url = 'models/Michelle.glb') {
     renderer.setScissorTest(false); renderer.setRenderTarget(null); renderer.setViewport(prevVP); renderer.setClearColor(0x000000, 1);
     return rt.texture;
   }
-  return { make, atlas, MAPS, OUTFITS };
+  return { make, atlas, MAPS, OUTFITS: ALL };
+}
+
+// =====================================================================
+//  LES FORCES DE L'ORDRE : le modèle « Soldier » (Mixamo, même licence que Michelle, même téléchargement), repeint en bleu
+//  nuit, avec un bouclier transparent « POLICE ». Il a sa propre animation « au repos » (Idle).
+//  const COPS = await loadPolice();  const c = COPS.make({ shield: true });  scene.add(c.root);  c.update(t)  (t en secondes)
+// =====================================================================
+export async function loadPolice(url = 'models/Soldier.glb') {
+  const gl = await new GLTFLoader().loadAsync(url);
+  const idle = gl.animations.find((a) => a.name === 'Idle'), walk = gl.animations.find((a) => a.name === 'Walk');
+  const hb = new THREE.Box3().setFromObject(gl.scene), H0 = hb.max.y - hb.min.y;
+  const shieldTex = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 512; const g = c.getContext('2d');
+    g.fillStyle = 'rgba(190,205,220,0.30)'; g.fillRect(0, 0, 256, 512); g.strokeStyle = 'rgba(30,35,45,0.9)'; g.lineWidth = 14; g.strokeRect(7, 7, 242, 498);
+    g.fillStyle = 'rgba(240,244,250,0.95)'; g.font = '800 46px Inter'; g.textAlign = 'center'; g.fillText('POLICE', 128, 150);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const shieldMat = new THREE.MeshStandardMaterial({ map: shieldTex, transparent: true, roughness: 0.25, metalness: 0.1, side: THREE.DoubleSide, depthWrite: false });
+  function make({ height = 1.8, shield = true, tint = '#3a4458', shadows = false, phase = 0 } = {}) {
+    const root = new THREE.Group(); const body = SkeletonUtils.clone(gl.scene); body.scale.setScalar(height / H0); body.rotation.y = Math.PI; root.add(body);
+    body.traverse((o) => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = shadows; o.material = o.material.clone(); o.material.color = new THREE.Color(tint); o.material.metalness = 0.1; o.material.roughness = 0.6; } });
+    const mixer = new THREE.AnimationMixer(body); const a = mixer.clipAction(idle); a.play();
+    if (shield) { const sh = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 1.15), shieldMat); sh.position.set(0.05, 0.95, 0.42); root.add(sh); }
+    return { root, body, mixer, update: (t) => mixer.setTime(Math.max(0, t + phase)) };
+  }
+  return { make };
 }

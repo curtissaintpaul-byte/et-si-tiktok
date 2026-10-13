@@ -70,14 +70,14 @@ export function makePile(scene, { geo, mats, count, nx = 10, nz = 20, gap = 0.00
 }
 
 // --- la foule
-export function makeCrowd(scene, PEOPLE, { count, t0, t1, spacing = 0.62, exclude = () => false, near = 40, fog = { color: new THREE.Color('#0b0d12'), near: 40, far: 150 }, cx = 0, cz = 0, seed = 9, face = [5, 7], atlas }) {
-  const R = rng(seed), spots = [], half = Math.ceil(Math.sqrt(count * 1.3 / 0.866) / 2) + 6;
+export function makeCrowd(scene, PEOPLE, { count, t0, t1, spacing = 0.62, exclude = () => false, near = 40, fog = { color: new THREE.Color('#0b0d12'), near: 40, far: 150 }, cx = 0, cz = 0, seed = 9, face = [5, 7], atlas, appearAt, reach = 1 }) {
+  const R = rng(seed), spots = [], half = Math.ceil(Math.sqrt(count * 1.3 / 0.866) / 2 * reach) + 6;
   for (let iy = -half; iy <= half; iy++) for (let ix = -half; ix <= half; ix++) {
     const x = cx + (ix + (iy & 1) * 0.5) * spacing + (R() - 0.5) * spacing * 0.26, z = cz + iy * spacing * 0.866 + (R() - 0.5) * spacing * 0.26;
     if (exclude(x, z)) continue; spots.push([x, z, Math.hypot(x - cx, (z - cz) * 1.08)]);
   }
-  spots.sort((a, b) => a[2] - b[2]); spots.length = Math.min(spots.length, count);
-  const ta = (i) => t0 + (t1 - t0) * Math.pow(i / count, 0.55);   // du centre vers l'extérieur
+  spots.sort((a, b) => a[2] - b[2]); spots.length = Math.min(spots.length, count); count = spots.length;   // (s'il n'y a pas assez de place, on s'arrête là)
+  const ta = appearAt || ((i) => t0 + (t1 - t0) * Math.pow(i / count, 0.55));   // du centre vers l'extérieur (ou un calendrier donné : appearAt(i) → instant)
   const countAt = (t) => (t < t0 ? 0 : Math.min(count, Math.floor(count * Math.pow(clamp((t - t0) / (t1 - t0)), 1 / 0.55))));
   // les vrais personnages, devant
   const real = [];

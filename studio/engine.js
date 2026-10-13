@@ -443,7 +443,10 @@ export const HUD = {
     s.style.color = subColor || '#fff'; if (subOpacity !== undefined) s.style.opacity = subOpacity;
   },
   show2(on) { this.el.b2.style.display = on ? '' : 'none'; },
-  live(t, line1, line2) { this.el.tr1.textContent = line1; this.el.tr2.textContent = line2; this.el.dot.style.opacity = Math.floor(t * 1.4) % 2 ? 0.25 : 1; },
+  live(t, line1, line2, word) {   // word : le mot à côté du point rouge (« LIVE » par défaut ; « SIMULATION » pour un événement réel à venir)
+    this.el.tr1.textContent = line1; this.el.tr2.textContent = line2; this.el.dot.style.opacity = Math.floor(t * 1.4) % 2 ? 0.25 : 1;
+    if (word !== undefined && this._lw !== word) { $('liveword').textContent = word; this._lw = word; }
+  },
   hook(t, html, tOut = 3.0) {
     if (this._hook !== html) { this.el.hook.innerHTML = html.replace(/ ([?!:])/g, '&#8239;$1'); this._hook = html; }   // espace insécable : le « ? » ne part jamais seul à la ligne
     this.el.hook.style.opacity = sm(0, 0.15, t) * (1 - sm(tOut - 0.35, tOut, t));

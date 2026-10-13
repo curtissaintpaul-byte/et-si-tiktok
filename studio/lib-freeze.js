@@ -14,10 +14,19 @@
 //  SUBS écrits en temps de scène → FZ.subs(SUBS) les décale ;       HUD.end(t, FZ.realT(T.endCard), …)
 //  Dans update(t) :  const ts = FZ.sceneT(t);  … tout le décor et les compteurs avec ts …  HUD.subs(t, SUBS_V);  FZ.draw(t, camera);
 //  Pour la bande-son : events() renvoie FZ.events() → [{ t, dur }] (temps vidéo), à passer à freeze_sfx() de snd.py.
+//  Le zoom de la caméra fixe pendant l'arrêt : zoomView(camera, cx, cy, z, k) (cx, cy : le point visé en pixels 720×1280).
 // =====================================================================
-export const RISK = { ok: '#4cd964', bof: '#ffd60a', mal: '#ff9f0a', grave: '#ff3b30' };
+export const RISK = { ok: '#4cd964', bof: '#ffd60a', mal: '#ff9f0a', grave: '#ff3b30', info: '#64d2ff' };   // info : un fait neutre (pas un risque)
 const sm = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 const SUB_BAND = [1140, 1300];   // la bande des sous-titres : on n'y pose jamais d'étiquette
+
+/** zoom numérique de la caméra fixe : on resserre le cadre autour de (cx, cy) ; k = 0 → image entière, k = 1 → zoom ×z.
+ *  Le centre du cadre glisse du milieu de l'image vers le point visé (et pas depuis le coin en haut à gauche). */
+export function zoomView(camera, cx, cy, z, k, W = 720, H = 1280) {
+  const zz = 1 + (z - 1) * k, w = W / zz, h = H / zz;
+  const mx = W / 2 + (cx - W / 2) * k, my = H / 2 + (cy + 0.05 * h - H / 2) * k;
+  camera.setViewOffset(W, H, Math.min(W - w, Math.max(0, mx - w / 2)), Math.min(H - h, Math.max(0, my - h / 2)), w, h);
+}
 
 export function makeFreeze(FREEZES) {
   const list = [...FREEZES].sort((a, b) => a.at - b.at);
@@ -54,12 +63,14 @@ export function makeFreeze(FREEZES) {
     g.globalAlpha = 1;
   }
 
-  function draw(t, camera) {
+  function draw(t, camera, base = '') {   // base : un filtre permanent de l'image (ex. « archives » sépia), gardé pendant l'arrêt
     g.clearRect(0, 0, 1080, 1920);
     const A = active(t);
-    if (!A) { gl.style.filter = 'none'; return; }
+    // (on cache aussi le calque : sinon Chrome peut garder à l'écran la dernière image dessinée, même après clearRect)
+    if (!A) { gl.style.filter = base || 'none'; c.style.visibility = 'hidden'; return; }
+    c.style.visibility = 'visible';
     const { f, u } = A, k = sm(0, 0.15, u) * (1 - sm(f.dur - 0.25, f.dur, u));
-    gl.style.filter = `saturate(${1 - 0.45 * k}) brightness(${1 - 0.05 * k})`;
+    gl.style.filter = `${base} saturate(${1 - 0.45 * k}) brightness(${1 - 0.05 * k})`;
     if (u < 0.14) { g.fillStyle = `rgba(255,255,255,${0.8 * (1 - u / 0.14)})`; g.fillRect(0, 0, 1080, 1920); }   // le « clac »
     // où sont les points du corps à l'écran
     const pts = f.tags.map((T) => { const p = T.at().clone().project(camera); return [(p.x * 0.5 + 0.5) * 1080, (-p.y * 0.5 + 0.5) * 1920, p.z < 1]; });

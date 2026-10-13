@@ -5,5 +5,7 @@
 set -e
 cd "$(dirname "$0")"
 mkdir -p models
-[ -s models/Michelle.glb ] || curl -sfL -o models/Michelle.glb https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/Michelle.glb
-ls -la models/Michelle.glb
+for f in Michelle Soldier; do   # Soldier : sert de base aux policiers et gendarmes (Mixamo aussi)
+  [ -s models/$f.glb ] || curl -sfL -o models/$f.glb https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/$f.glb
+done
+ls -la models/

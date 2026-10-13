@@ -46,6 +46,13 @@ S'inspirer de l'épisode existant le plus proche (même genre de décor) et gard
   À ne pas oublier : `T.duration += FZ.total`, `SUBS_V = FZ.subs(SUBS)` pour les sous-titres, `HUD.end(t, FZ.realT(T.endCard), …)`,
   `const ts = FZ.sceneT(t)` pour tout le décor et les compteurs, `FZ.draw(t, camera)` à la fin d'update, `freezes: FZ.events()` dans events(),
   et dans audio.py `freeze_sfx(S, sfx, e['t'], e['dur'])` pour chaque arrêt.
+  Pendant un arrêt, le zoom de la caméra fixe (`camera.setViewOffset`, ×3 à ×8) cadre le personnage : voir `episodes/manif-protection/` et `episodes/manif-million/` (zoom sur un policier).
+  Étiquette `risk: 'info'` (bleu) pour un fait neutre qui n'est pas un risque.
+- **Série « 17 octobre »** (manifestations, place de la Bastille) : le décor, le gaz lacrymogène, les lunettes et le masque sont dans `lib-manif.js` ;
+  les policiers dans `lib-people.js` (`loadPolice`). Les vidéos « histoire » (`manif-tout`, `manif-rien`) partagent `lib-histoire.js` et `histoire_snd.py` :
+  la même caméra « rembobine » des époques (filtre sépia, grain, tampon OBTENU / LA LOI PASSE), le scene.js ne contient que la liste des époques et les textes.
+  Tenues en plus (ex. gilet jaune) : `loadPeople(renderer, undefined, { extra: [[pantalon, peau, haut]] })`, numérotées après les 8.
+  Sujet politique : rester neutre, des faits datés et sourcés des deux côtés, et dire ce que ça change concrètement pour « toi ».
 - `audio.py` : bande-son 100 % synthétisée avec `snd.py` (ambiance du lieu, bruitages calés sur les événements, musique qui monte), master vers −15/−16 LUFS.
 
 ## 4. Tester avant de tout rendre
