@@ -1,63 +1,56 @@
 // =====================================================================
-//  ÉPISODE : « Et si le 17 octobre changeait tout ? » (série 17 octobre, vidéo 3) — neutre : l'histoire + l'impact pour toi
-//  La caméra de la Bastille rembobine : 1936, 1968, 2006, 2018 (quatre fois où la rue a obtenu quelque chose).
-//  Effet multiplication en 2018 : les 10 milliards d'euros des mesures, en cubes d'un million d'euros.
+//  ÉPISODE : « Et si le 17 octobre changeait tout ? » (série 17 octobre, vidéo 3, version 2 voulue par Curtis)
+//  Hypothèse : le gouvernement accepte les revendications. Septembre 2027, grand soleil sur la Bastille.
+//  Moteur commun : lib-avenir.js (même scène que « ne changeait rien », seuls les textes et le ciel changent).
 //  Faits (sources dans la légende) :
-//   - 1936 : plus d'un million de grévistes ; accords de Matignon le 7 juin ; congés payés (2 semaines) votés le 20 juin,
-//     semaine de 40 h le 21 juin (Wikipédia, accords de Matignon).
-//   - 1968 : accords de Grenelle, 27 mai : SMIG +35 % (Wikipédia, accords de Grenelle).
-//   - 2006 : CPE (contrat première embauche, moins de 26 ans) ; 4 avril : plus d'1 million selon la police, 3,1 millions
-//     selon les syndicats ; loi déjà promulguée ; abandon annoncé le 10 avril (Techno-Science, chronologie).
-//   - 2018 : hausse de la taxe carbone prévue au 1er janvier 2019 : +6,5 cts/L sur le gazole (La finance pour tous) ;
-//     abandonnée ; 10 décembre : +100 € net/mois pour un salarié au SMIC (surtout la prime d'activité) ; coût 8 à 10 milliards
-//     selon le gouvernement, jusqu'à 11 selon d'autres estimations (Banque des territoires) → « environ 10 milliards ».
-//   - 7 octobre 2026 : le gouvernement annonce une baisse du gazole de 12 à 18 cts/L pendant 3 mois, attendue en novembre
-//     (stocks stratégiques mis sur le marché ; Selectra, 8 octobre 2026).
-//   - 10 milliards en billets de 100 € : 100 millions de billets de 14,7 × 7,7 cm × 0,108 mm = 122 m³ = un cube de 4,96 m.
-//   - gazole : 2,363 €/L le 3 octobre 2026 (prix-carburant.eu, données prix-carburants.gouv.fr) → 50 L = 118 € ;
-//     taxes : accise 60,75 cts/L + TVA 20 % → ~50 € sur 50 L (Selectra, 41,9 % le 22 septembre 2026).
-//   - congés payés : 2 semaines en 1936, 5 depuis 1982 (Welcome to the Jungle, histoire des congés payés).
+//   - PLF 2027 (présenté le 1er octobre 2026, pas encore voté) : 1 588 postes d'enseignants supprimés à la rentrée 2027,
+//     dont 1 250 dans le public (Café pédagogique, 2/10/2026) ; vote final à l'Assemblée en novembre (NosParlementaires).
+//   - hôpital : « il manque 1,3 milliard d'euros aux établissements de santé » en 2027 (FHF, PLFSS 2027) ;
+//     ONDAM 2027 +2 % pour une tendance à +3,4 % (Caducée, 5/10/2026).
+//   - étudiants : +200 € par mois de bourse, versée sur 12 mois (10 mesures d'urgence, Union étudiante et USL, 5/10/2026).
+//   - carburant : « blocage des prix » à la pompe et « contrôle des marges » (appel du 17 octobre, 17octobregiletjaune.net) ;
+//     gazole 2,363 €/L le 3 octobre 2026 (prix-carburant.eu).
 // =====================================================================
-import { buildHistoire } from '../../lib-histoire.js';
+import { buildAvenir } from '../../lib-avenir.js';
+import { RISK } from '../../lib-freeze.js';
 
-const OK = '#ffcf6b';   // (couleur neutre, la même que dans « ne changeait rien »)
-const T = { hookOut: 3.0, endCard: 60.8 };
+const OK = RISK.ok;
+const T = { hookOut: 3.0, ff: 13.6, endCard: 48.8 };
 const SUBS = [
-  [3.2, 5.3, 'La rue a déjà tout changé ? On rembobine.'],
-  [5.6, 8.9, '1936. Plus d’un million de grévistes occupent les usines.'],
-  [9.1, 12.6, 'En juin : 2 semaines de congés payés, et la semaine de 40 heures.'],
-  [13.0, 16.3, 'Mai 1968. La France est à l’arrêt pendant des semaines.'],
-  [16.5, 20.0, 'Accords de Grenelle : le salaire minimum augmente de 35 %.'],
-  [20.4, 24.0, '2006. Les jeunes défilent contre le CPE, un contrat pour les moins de 26 ans.'],
-  [24.2, 27.6, 'La loi est déjà votée. Le 10 avril, le gouvernement l’abandonne.'],
-  [28.0, 31.4, '2018. Les gilets jaunes, partis de la hausse des taxes sur le carburant.'],
-  [31.6, 34.8, 'La hausse est annulée, et +100 € par mois pour un salarié au SMIC.'],
-  [35.0, 38.4, 'Ces mesures ont coûté environ 10 milliards d’euros.'],
-  [38.6, 42.6, 'En billets de 100 €, ça ferait un cube de 5 mètres de côté.'],
-  [43.4, 45.4, 'Et samedi, qu’est-ce qui changerait pour toi ?'],
-  [45.9, 49.4, 'Tes congés payés, eux, existent depuis 1936.'],
-  [49.6, 53.2, 'Avant samedi, le gouvernement a annoncé 12 à 18 centimes de moins sur le gazole, pour 3 mois.'],
-  [53.4, 56.8, 'Mais ces mesures ont un coût, et la rue n’obtient pas toujours ce qu’elle demande.'],
-  [57.0, 60.4, 'Et si samedi ne changeait rien ? C’est l’autre vidéo.'],
+  [3.2, 6.6, 'Samedi 17 octobre. Au premier rang : une prof, une infirmière, un étudiant, un automobiliste.'],
+  [6.8, 9.6, 'Chacun vient avec ce qu’il réclame.'],
+  [10.0, 12.8, 'Maintenant, imagine que le gouvernement dise oui à tout.'],
+  [14.6, 17.6, 'Septembre 2027. Les 1 588 postes de profs que le budget supprimait sont gardés.'],
+  [18.6, 22.4, '1 588 profs, c’est ça. Tous gardés à la rentrée.'],
+  [26.6, 29.8, 'À l’hôpital, le 1,3 milliard qui manquait selon les fédérations arrive.'],
+  [30.0, 33.2, 'L’étudiant boursier touche 200 € de plus par mois, 12 mois sur 12.'],
+  [33.4, 37.2, 'À la pompe, les prix sont bloqués et les marges des pétroliers contrôlées.'],
+  [38.0, 41.4, 'Tout ça, c’est ce que réclament ceux qui défilent samedi.'],
+  [41.6, 45.0, 'Le budget 2027 sera voté à l’Assemblée en novembre.'],
+  [45.2, 48.6, 'Et si samedi ne changeait rien ? C’est l’autre vidéo.'],
 ];
-const RES = (sub, value = 'OBTENU') => ({ label: 'RÉSULTAT', value, sub, color: OK });
+const B = (label, value, sub) => ({ label, value, sub, color: OK });
 
-export default () => buildHistoire({
-  T, SUBS, seed: 36, sceneEnd: 64.6,
+export default () => buildAvenir({
+  mode: 'tout', T, SUBS, seed: 36, sceneEnd: 52.6, ffLine: 'SI TOUT EST ACCEPTÉ',
   hook: 'Et si le 17 octobre changeait <em>tout</em> ?',
-  rewindAt: 3.6, back: 43.0,
-  now: { fill: 0.36, b1: { label: 'SAMEDI 17 OCTOBRE 2026', value: '?', sub: 'APPELS CONTRE LA VIE CHÈRE' }, b2: { label: 'GAZOLE', value: '2,36 €/L', sub: 'PRIX MOYEN AU 3 OCTOBRE 2026', color: '#ff9f0a' } },
-  eras: [
-    { year: 1936, t0: 5.4, t1: 12.8, date: 'JUIN 1936', fill: 0.62, b1: { label: 'JUIN 1936 · FRONT POPULAIRE', value: '+1 M', sub: 'DE GRÉVISTES' }, b2: RES('CONGÉS PAYÉS · SEMAINE DE 40 H'), stamp: { at: 9.1, text: 'OBTENU', ok: true } },
-    { year: 1968, t0: 12.8, t1: 20.2, date: 'MAI 1968', fill: 0.82, b1: { label: 'MAI 1968', value: 'GRÈVE', sub: 'LA FRANCE À L’ARRÊT' }, b2: RES('SALAIRE MINIMUM +35 %'), stamp: { at: 16.5, text: 'OBTENU', ok: true } },
-    { year: 2006, t0: 20.2, t1: 27.8, date: 'AVRIL 2006', fill: 0.9, b1: { label: 'PRINTEMPS 2006 · CPE', value: '3,1 M', sub: 'SELON LES SYNDICATS · 1 M SELON LA POLICE' }, b2: RES('LE 10 AVRIL 2006', 'RETIRÉ'), stamp: { at: 24.2, text: 'RETIRÉ', ok: true } },
-    { year: 2018, t0: 27.8, t1: 43.0, date: 'DÉCEMBRE 2018', fill: 0.5, b1: { label: 'HIVER 2018 · GILETS JAUNES', value: '+6,5 cts', sub: 'DE TAXE PRÉVUE PAR LITRE DE GAZOLE' }, b2: RES('HAUSSE ANNULÉE · +100 €/MOIS POUR UN SALARIÉ AU SMIC'), stamp: { at: 31.6, text: 'OBTENU', ok: true }, stampOut: 34.8 },
+  now: { b1: { label: 'SAMEDI 17 OCTOBRE 2026', value: 'LA MANIF', sub: 'LE BUDGET 2027 EST EN DÉBAT' }, b2: { label: 'GAZOLE', value: '2,36 €/L', sub: 'PRIX MOYEN AU 3 OCTOBRE 2026', color: '#ff9f0a' } },
+  effect: { label: 'PROFS GARDÉS', count: 1588, c0: 17.8, c1: 19.6, t0: 18.4, t1: 22.6, c2: 24.4, c3: 26.4 },
+  beats: [
+    { t0: 14.0, t1: 17.8, who: 'prof', b1: B('POSTES DE PROFS · RENTRÉE 2027', '0 supprimé', 'AU LIEU DE 1 588') },
+    { t0: 26.4, t1: 29.9, who: 'inf', b1: B('HÔPITAL · 2027', '+1,3 Md€', 'CE QUI MANQUE SELON LES FÉDÉRATIONS') },
+    { t0: 29.9, t1: 33.3, who: 'etu', b1: B('BOURSE ÉTUDIANTE', '+200 €/mois', '12 MOIS SUR 12') },
+    { t0: 33.3, t1: 52.6, who: 'auto', b1: B('PRIX À LA POMPE', 'BLOQUÉS', 'MARGES CONTRÔLÉES') },
   ],
-  effect: { era: 2018, label: 'COÛT DES MESURES 2018 (ENVIRON)', c0: 34.8, c1: 36.6, t0: 35.4, t1: 40.0, c2: 41.0, c3: 43.0, count: 10000, x: 2, z: 77 },
-  freeze: { at: 45.6, dur: 6.4, tags: [
-    { pt: 'head', title: 'TES VACANCES', lines: ['les congés payés', 'existent depuis 1936'], risk: 'info', side: 'right', dy: -60 },
-    { pt: 'chest', title: 'TON SALAIRE', lines: ['le minimum a pris +35 %', 'd’un coup en 1968'], risk: 'info', side: 'left', dy: -40 },
-    { pt: 'rHand', title: 'TON PLEIN', lines: ['50 L de gazole : 118 €,', 'dont 50 € de taxes'], risk: 'info', side: 'right', dy: 60 },
-    { pt: 'lKnee', title: 'LA FACTURE', lines: ['environ 10 milliards en 2018,', 'payés par l’argent public'], risk: 'info', side: 'left', dy: 30 } ] },
-  end: { kicker: 'SOURCES : ACCORDS DE MATIGNON ET DE GRENELLE · BANQUE DES TERRITOIRES · LA FINANCE POUR TOUS · SELECTRA · PRIX-CARBURANTS.GOUV.FR', q: 'Et toi, samedi,<br>tu voudrais que<br>ça change quoi ?', cta: 'RÉPONDS EN COMMENTAIRE' },
+  fz1: { at: 9.8, dur: 6.0, title: 'ARRÊT SUR IMAGE · ZOOM ×3 · CE QU’ILS RÉCLAMENT', tags: [
+    { who: 'prof', title: 'LA PROF', lines: ['garder les 1 588 postes', 'que le budget supprime'], risk: 'info', side: 'left', dy: -70 },
+    { who: 'inf', part: 'chest', title: 'L’INFIRMIÈRE', lines: ['1,3 milliard de plus', 'pour l’hôpital'], risk: 'info', side: 'left', dy: 90 },
+    { who: 'etu', title: 'L’ÉTUDIANT', lines: ['+200 € par mois', 'de bourse'], risk: 'info', side: 'right', dy: -70 },
+    { who: 'auto', part: 'chest', title: 'L’AUTOMOBILISTE', lines: ['bloquer les prix', 'à la pompe'], risk: 'info', side: 'right', dy: 90 } ] },
+  fz2: { at: 37.6, dur: 6.4, title: 'ARRÊT SUR IMAGE · SEPTEMBRE 2027', tags: [
+    { who: 'prof', title: 'LA PROF', lines: ['1 588 postes gardés', 'à la rentrée'], risk: 'ok', side: 'left', dy: -70 },
+    { who: 'inf', part: 'chest', title: 'L’INFIRMIÈRE', lines: ['+1,3 milliard', 'pour l’hôpital'], risk: 'ok', side: 'left', dy: 90 },
+    { who: 'etu', title: 'L’ÉTUDIANT', lines: ['+200 € par mois,', '12 mois sur 12'], risk: 'ok', side: 'right', dy: -70 },
+    { who: 'auto', part: 'chest', title: 'L’AUTOMOBILISTE', lines: ['prix bloqués,', 'marges contrôlées'], risk: 'ok', side: 'right', dy: 90 } ] },
+  end: { kicker: 'HYPOTHÈSE : LES REVENDICATIONS ACCEPTÉES · SOURCES : PLF ET PLFSS 2027 · FHF · UNION ÉTUDIANTE · APPEL DU 17 OCTOBRE · PRIX-CARBURANTS.GOUV.FR', q: 'Et toi, samedi,<br>tu réclames quoi ?', cta: 'RÉPONDS EN COMMENTAIRE' },
 });
