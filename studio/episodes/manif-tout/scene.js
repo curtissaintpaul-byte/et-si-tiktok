@@ -37,8 +37,8 @@ export default () => buildAvenir({
   now: { b1: { label: 'SAMEDI 17 OCTOBRE 2026', value: 'LA MANIF', sub: 'LE BUDGET 2027 EST EN DÉBAT' }, b2: { label: 'GAZOLE', value: '2,36 €/L', sub: 'PRIX MOYEN AU 3 OCTOBRE 2026', color: '#ff9f0a' } },
   effect: { label: 'PROFS GARDÉS', count: 1588, c0: 17.8, c1: 19.6, t0: 18.4, t1: 22.6, c2: 24.4, c3: 26.4 },
   beats: [
-    { t0: 14.0, t1: 17.8, who: 'prof', b1: B('POSTES DE PROFS · RENTRÉE 2027', '0 supprimé', 'AU LIEU DE 1 588') },
-    { t0: 26.4, t1: 29.9, who: 'inf', b1: B('HÔPITAL · 2027', '+1,3 Md€', 'CE QUI MANQUE SELON LES FÉDÉRATIONS') },
+    { t0: 14.0, t1: 18.2, who: 'prof', b1: B('POSTES DE PROFS · RENTRÉE 2027', '0 supprimé', 'AU LIEU DE 1 588') },
+    { t0: 26.0, t1: 29.9, who: 'inf', b1: B('HÔPITAL · 2027', '+1,3 Md€', 'CE QUI MANQUE SELON LES FÉDÉRATIONS') },
     { t0: 29.9, t1: 33.3, who: 'etu', b1: B('BOURSE ÉTUDIANTE', '+200 €/mois', '12 MOIS SUR 12') },
     { t0: 33.3, t1: 52.6, who: 'auto', b1: B('PRIX À LA POMPE', 'BLOQUÉS', 'MARGES CONTRÔLÉES') },
   ],

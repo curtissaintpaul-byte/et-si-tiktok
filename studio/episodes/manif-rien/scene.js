@@ -36,8 +36,8 @@ export default () => buildAvenir({
   now: { b1: { label: 'SAMEDI 17 OCTOBRE 2026', value: 'LA MANIF', sub: 'LE BUDGET 2027 EST EN DÉBAT' }, b2: { label: 'GAZOLE', value: '2,36 €/L', sub: 'PRIX MOYEN AU 3 OCTOBRE 2026', color: '#ff9f0a' } },
   effect: { label: 'PROFS EN MOINS', count: 1588, c0: 17.8, c1: 19.6, t0: 19.6, t1: 23.4, c2: 24.4, c3: 26.4 },
   beats: [
-    { t0: 14.0, t1: 17.8, who: 'prof', b1: B('POSTES DE PROFS · RENTRÉE 2027', '−1 588', 'PRÉVU PAR LE BUDGET 2027') },
-    { t0: 26.4, t1: 29.9, who: 'inf', b1: B('HÔPITAL · 2027', '−1,3 Md€', 'CE QUI MANQUE SELON LES FÉDÉRATIONS') },
+    { t0: 14.0, t1: 18.2, who: 'prof', b1: B('POSTES DE PROFS · RENTRÉE 2027', '−1 588', 'PRÉVU PAR LE BUDGET 2027') },
+    { t0: 26.0, t1: 29.9, who: 'inf', b1: B('HÔPITAL · 2027', '−1,3 Md€', 'CE QUI MANQUE SELON LES FÉDÉRATIONS') },
     { t0: 29.9, t1: 33.3, who: 'etu', b1: B('APL · 2027', '+0 €', 'PAS DE REVALORISATION') },
     { t0: 33.3, t1: 52.6, who: 'auto', b1: B('PLEIN DE 50 L DE GAZOLE', '≈ 118 €', 'BAISSE ANNONCÉE : 3 MOIS') },
   ],
