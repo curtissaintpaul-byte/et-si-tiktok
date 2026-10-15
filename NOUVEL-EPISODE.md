@@ -83,3 +83,17 @@ Ton simple et naturel. **Jamais de tirets pour enchaîner les idées**, rien qui
 ## 8. Mettre Notion à jour
 Ligne de l'épisode : statut « 📅 Programmée », date de publication, `Lien vidéo` (URL GitHub), légende, hashtags, durée, code, et dans `Notes` le lien Metricool (`plannerUrl`).
 Si quelque chose a bloqué : laisser la ligne en « 🎬 En fabrication » et écrire le problème dans `Notes`.
+
+## Annexe : le style « reconstitution » (rendu PS2, façon reportage télé)
+Testé sur `episodes/vol-voiture` (15/10/2026), inspiré des reconstitutions 3D des vidéos d'enquête sur YouTube.
+- `lib-ps2.js` : `makePS2(stage, { width: 360 })` juste après `createStage()`. L'image est calculée en 360 × 640 puis agrandie sans lissage
+  (gros pixels), moins de couleurs avec une trame 4 × 4 (visible dans les ombres), flou de profondeur `PS.dof(distance, ouverture)`,
+  looks `PS.look('normal' | 'aerial' | 'red')`. `ps2Textures(objet, 96)` : les textures en gros carrés. `pixTex()` : textures dessinées à la main.
+- Montage en **plans courts** (3 s) au lieu d'une caméra fixe : un tableau `SHOTS` (id, début, caméra(u), flou, look), `u` va de 0 à 1 dans le plan.
+  Pour tester un plan seul : `still.mjs "vol-voiture&shot=boitier&u=0.5" …`.
+- Inserts typiques : vue aérienne noir et blanc avec point rouge (calque 2D), gros plan d'objet sur table grise, tableau d'enquête rouge
+  (texture dessinée sur un plan 3D, photos prises dans la scène avec `snap()`), arrêt sur image sur un objet.
+- `lib-rue.js` : rue pavillonnaire de nuit (maisons, muret, haies, réverbères au sodium), `makeSUV()` (carrosserie creuse : on peut filmer
+  l'intérieur), `keyFob()`, `relayBox()`.
+- `lib-people.js` → `loadHooded()` : silhouettes à capuche (modèle Soldier teinté sombre) avec ses animations Idle/Walk/Run + des os tordus par-dessus.
+- Limite : pas de vrais visages d'hommes réalistes (on n'a que Michelle et Soldier). On filme de dos, en capuche, ou on passe par Higgsfield (crédits).

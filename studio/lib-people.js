@@ -40,7 +40,7 @@ export async function loadPeople(renderer, url = 'models/Michelle.glb', { extra 
   // --- les 8 textures
   const img = mat0.map.image, cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
   const g0 = cv.getContext('2d'); g0.drawImage(img, 0, 0); const base = g0.getImageData(0, 0, cv.width, cv.height);
-  const paint = ([pants, skin, top]) => {
+  const paint = ([pants, skin, top, rest]) => {   // rest : (option) la couleur de tout le reste qui est coloré (chaussures…)
     const d = new ImageData(new Uint8ClampedArray(base.data), base.width, base.height); const a = d.data;
     for (let i = 0; i < a.length; i += 4) {
       const r = a[i] / 255, gg = a[i + 1] / 255, bl = a[i + 2] / 255, mx = Math.max(r, gg, bl), mn = Math.min(r, gg, bl), sat = mx > 0 ? (mx - mn) / mx : 0;
@@ -49,6 +49,7 @@ export async function loadPeople(renderer, url = 'models/Michelle.glb', { extra 
       if (pants && mx > 0.15 && sat > 0.45 && h >= 38 && h <= 72) c = pants.map((x) => x * lum / 0.75);                                   // pantalon jaune
       else if (skin && h >= 10 && h <= 36 && sat > 0.22 && sat < 0.8 && mx > 0.18 && mx < 0.8) c = skin.map((x) => x * Math.min(1.25, lum / 0.36));   // peau
       else if (top && sat < 0.2 && mx > 0.3 && mx < 0.92) c = top.map((x) => x * lum / 0.62);                                              // haut gris
+      else if (rest && sat > 0.25) c = rest.map((x) => x * Math.min(1.4, lum / 0.4));                                                     // le reste (chaussures…)
       if (c) { a[i] = Math.min(255, c[0] * 255); a[i + 1] = Math.min(255, c[1] * 255); a[i + 2] = Math.min(255, c[2] * 255); }
     }
     const c2 = document.createElement('canvas'); c2.width = cv.width; c2.height = cv.height; c2.getContext('2d').putImageData(d, 0, 0);
@@ -164,6 +165,50 @@ export async function loadPolice(url = 'models/Soldier.glb') {
     const mixer = new THREE.AnimationMixer(body); const a = mixer.clipAction(idle); a.play();
     if (shield) { const sh = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 1.15), shieldMat); sh.position.set(0.05, 0.95, 0.42); root.add(sh); }
     return { root, body, mixer, update: (t) => mixer.setTime(Math.max(0, t + phase)) };
+  }
+  return { make };
+}
+
+// =====================================================================
+//  LES SILHOUETTES À CAPUCHE (voleurs, suspects…) : le même modèle « Soldier » (il a une capuche et une visière),
+//  teinté sombre. Il garde ses animations (Idle, Walk, Run) et on peut en plus tordre des os par-dessus,
+//  avec les mêmes axes que Michelle (repère du personnage : il regarde vers +Z).
+//  const HOOD = await loadHooded();  const h = HOOD.make({ tint: '#2c2e33' });  scene.add(h.root);
+//  dans update(t) :  h.pose('Walk', t)  ou  h.pose('Idle', t, { RightArm: [['x', -1.2]] })   ;  h.point('RightHand')
+// =====================================================================
+export async function loadHooded(url = 'models/Soldier.glb') {
+  const gl = await new GLTFLoader().loadAsync(url);
+  const clips = Object.fromEntries(gl.animations.map((a) => [a.name, a]));
+  const hb = new THREE.Box3().setFromObject(gl.scene), H0 = hb.max.y - hb.min.y;
+  const qa = new THREE.Quaternion();
+  function make({ tint = '#2c2e33', height = 1.82, shadows = true } = {}) {
+    const root = new THREE.Group(); const body = SkeletonUtils.clone(gl.scene); body.scale.setScalar(height / H0); body.rotation.y = Math.PI; root.add(body);
+    const mats = [];
+    body.traverse((o) => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = shadows; o.material = o.material.clone(); o.material.color = new THREE.Color(tint); o.material.metalness = 0.05; o.material.roughness = 0.8; mats.push(o.material); } });
+    const mixer = new THREE.AnimationMixer(body), acts = {};
+    for (const n of ['Idle', 'Walk', 'Run']) { acts[n] = mixer.clipAction(clips[n]); acts[n].play(); }
+    const bone = (n) => body.getObjectByName('mixamorig' + n);
+    const charQ = (o) => { const q = new THREE.Quaternion(), chain = []; while (o && o !== root) { chain.push(o); o = o.parent; } for (let i = chain.length - 1; i >= 0; i--) q.multiply(chain[i].quaternion); return q; };
+    // la pose de repos de chaque os : on y revient à chaque image (sinon un os que l'animation ne touche pas garderait
+    // la rotation de l'image d'avant, et nos rotations en plus s'additionneraient d'une image à l'autre)
+    const bones = []; body.traverse((o) => { if (o.isBone) bones.push([o, o.quaternion.clone(), o.position.clone()]); });
+    const H = {
+      root, body, mats, mixer,
+      /** une animation (Idle, Walk, Run) à l'instant t, puis des rotations en plus : { Os: [['x', angle]…] } */
+      pose(anim, t, spec = {}) {
+        for (const [o, q, p] of bones) { o.quaternion.copy(q); o.position.copy(p); }
+        for (const n in acts) acts[n].setEffectiveWeight(n === anim ? 1 : 0);
+        mixer.setTime(Math.max(0, t));
+        for (const n in spec) {
+          const b = bone(n); if (!b) continue; const pq = charQ(b.parent), cur = pq.clone().multiply(b.quaternion);
+          for (const [ax, ang] of spec[n]) cur.premultiply(qa.setFromAxisAngle(AX[ax], ang));
+          b.quaternion.copy(pq.invert().multiply(cur));
+        }
+      },
+      point(n) { root.updateMatrixWorld(true); return bone(n).getWorldPosition(new THREE.Vector3()); },
+      hot(k) { for (const m of mats) { m.emissive.setRGB(k, k, k); } },
+    };
+    return H;
   }
   return { make };
 }
