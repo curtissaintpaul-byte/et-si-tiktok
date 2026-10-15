@@ -23,7 +23,7 @@ Pas un reportage de prévention : pas de conseils de sécurité ni de « bon ré
 **Un seul personnage à l'écran → il a un prénom** et on raconte son histoire (la question d'accroche reste en « tu »).
 Point de vue : toujours une personne lambda. On montre ce qui arriverait à TON corps et à ta vie, avec les risques concrets pour ta santé illustrés à l'écran (silhouette du corps avec les zones touchées, compteur de ce que tu ressens : poids ressenti, rythme cardiaque, température…). Exemple F1 : pas la vie du pilote, mais le cou d'un conducteur normal qui lâche au premier freinage, la vue qui se brouille dans les virages, la chaleur, le cœur qui s'emballe.
 Dans Notion, prendre la ligne au statut « 👍 Validée » la plus ancienne. La passer en « 🎬 En fabrication ».
-Ne jamais prendre une ligne au statut « 🎞 Reconstitution » : ces idées sont réservées au format reconstitution (style PS2, plans courts, persos Mixamo qui ne sont que sur l'ordi de Curtis), fabriqué avec Claude à raison d'une par semaine (voir l'annexe en bas).
+Ne jamais prendre une ligne au statut « 🎞 Reconstitution », ni une ligne « 👍 Validée » dont les Notes commencent par « 🎞 Reconstitution » (Curtis valide ces idées avec 👍 comme les autres) : ces idées sont réservées au format reconstitution (style PS2, plans courts, persos Mixamo qui ne sont que sur l'ordi de Curtis), fabriqué avec Claude à raison d'une par semaine (voir l'annexe en bas).
 
 ## 2. Vérifier les faits AVANT d'écrire la scène
 - Chaque chiffre affiché ou dit dans un sous-titre doit venir d'une source sérieuse (NASA, ESA, articles scientifiques, organismes officiels) ou d'un calcul physique refait en Python. Pas de bêtise, pas d'approximation présentée comme exacte.
