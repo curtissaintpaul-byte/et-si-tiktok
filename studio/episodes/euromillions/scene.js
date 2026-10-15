@@ -80,19 +80,20 @@ export default async function () {
   const A = CAST.make('Remy', { height: 1.78 }), K = CAST.make('Kate', { height: 1.66 });
   scene.add(A.root, K.root);
   const TK = makeTicket({ nums: NUMS, stars: STARS }); A.hold(TK.mesh, 'RightHand', HOLD);
+  const PH = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.155, 0.009), new THREE.MeshStandardMaterial({ color: '#141414', roughness: 0.4 })); A.hold(PH, 'RightHand', { off: [0.02, 0.1, 0.0], rot: [0, 0, 0] }); PH.scale.multiplyScalar(1.15);
   const TKc = makeTicket({ nums: NUMS, stars: STARS }); TKc.mesh.rotation.x = -Math.PI / 2; TKc.mesh.rotation.z = 0.25; TKc.mesh.position.copy(TB.counterTop).add(v3(0.05, 0.003, 0.05)); scene.add(TKc.mesh);
   const SEAT = CH.at.clone().add(v3(0.55, 0, 0.45)), SEAT_RY = -Math.PI / 2;   // assis au bord du lit, face à la télé (vers -x)
   function poseAll(ts, S) {
-    TK.mesh.visible = false; K.root.visible = S === 'tabac' || S === 'ticket' || S === 'end';
+    TK.mesh.visible = false; PH.visible = false; K.root.visible = S === 'tabac' || S === 'ticket' || S === 'end';
     K.root.position.copy(TB.clerk); K.root.rotation.y = 0; K.pose('idle', ts + 2);
     if (S === 'tabac' || S === 'ticket' || S === 'end') { A.root.position.copy(TB.counterFront); A.root.rotation.y = Math.PI; A.pose('idle', ts); return; }
-    if (S === 'multi') { A.root.position.copy(ST).add(v3(0.15, 0, 1.5)); A.root.rotation.y = -0.2; A.pose([['lookaround', 1.5 + (ts - SH.multi) * 0.6, 0.6], ['idle', ts, 0.4]], { Neck: [['x', -0.25 * sm(T_A0, T_A1, ts)]] }); return; }
+    if (S === 'multi') { A.root.position.copy(ST).add(v3(0.12, 0, 0.05)); A.root.rotation.y = 0; A.pose([['lookaround', 1.5 + (ts - SH.multi) * 0.6, 0.6], ['idle', ts, 0.4]], { Neck: [['x', -0.25 * sm(T_A0, T_A1, ts)]] }); return; }
     if (S === 'tirage' || S === 'check') {   // assis devant la télé, le ticket à la main ; au moment où tout est bon, tu te redresses
       A.root.position.copy(SEAT); A.root.rotation.y = SEAT_RY; TK.mesh.visible = true;
       const up = sm(FREEZE_AT - 0.4, FREEZE_AT, ts);
       A.pose([['sit', 2.0, 1, LOWER], ['texting', TEXT0 + 0.08 * Math.sin(ts * 1.4), 1, UPPER]], { Neck: [['x', 0.1 - 0.15 * up]], Spine: [['x', -0.12 * up]] }); return;
     }
-    if (S === 'appel' || S === 'tableau') { A.root.position.copy(CH.at).add(v3(-0.1 + 0.25 * Math.sin((ts - SH.appel) * 0.9), 0, 0.3)); A.root.rotation.y = 0.6 + 0.5 * Math.sin((ts - SH.appel) * 0.9); A.pose('phone', 3 + (ts - SH.appel)); return; }
+    if (S === 'appel' || S === 'tableau') { A.root.position.copy(CH.at).add(v3(-0.1 + 0.25 * Math.sin((ts - SH.appel) * 0.9), 0, 0.3)); A.root.rotation.y = 0.6 + 0.5 * Math.sin((ts - SH.appel) * 0.9); A.pose('phone', 9.0 + (ts - SH.appel)); PH.visible = true; return; }
   }
 
   // --- le tableau d'enquête : tes vraies chances
@@ -162,8 +163,8 @@ export default async function () {
   const S0 = (x, y, z) => ST.clone().add(v3(x, y, z));
   const SHOTS = [
     { id: 'tabac', t0: SH.tabac, cam: (u) => ({ p: P(lerp(-1.9, -1.6, u), 1.6, lerp(2.0, 1.8, u)), l: P(0.3, 1.25, -0.9), fov: 54 }) },
-    { id: 'ticket', t0: SH.ticket, near: 0.02, cam: (u) => ({ p: TKc.mesh.position.clone().add(v3(lerp(0.0, 0.02, u), lerp(0.24, 0.2, u), lerp(0.2, 0.16, u))), l: TKc.mesh.position.clone(), fov: 40 }), dof: ['ticketc', 0.03], fill: 0.6 },
-    { id: 'multi', t0: SH.multi, near: 0.03, cam: (u) => { const k = sm(0.08, 0.6, u); return { p: S0(lerp(0.05, 0.2, k), lerp(0.42, 2.3, k), lerp(1.35, 7.2, k)), l: S0(lerp(0.0, 0.1, k), lerp(0.28, 0.95, k), lerp(0.6, 0, k)), fov: lerp(38, 46, k) }; } },
+    { id: 'ticket', t0: SH.ticket, near: 0.02, cam: (u) => ({ p: TKc.mesh.position.clone().add(v3(lerp(0.0, 0.02, u), lerp(0.24, 0.2, u), lerp(0.2, 0.16, u))), l: TKc.mesh.position.clone(), fov: 40 }), dof: ['ticketc', 0.03] },
+    { id: 'multi', t0: SH.multi, near: 0.03, cam: (u) => { const k = sm(0.08, 0.6, u); return { p: S0(lerp(0.05, 0.25, k), lerp(0.42, 2.7, k), lerp(1.35, 8.8, k)), l: S0(lerp(0.0, 0.15, k), lerp(0.28, 1.0, k), lerp(0.6, 0, k)), fov: lerp(38, 46, k) }; } },
     { id: 'tirage', t0: SH.tirage, cam: (u) => ({ p: R(lerp(1.55, 1.4, u), 1.25, lerp(0.95, 0.85, u)), l: R(-1.62, 1.05, 0.45), fov: 50 }), dof: ['tv', 0.012] },
     { id: 'check', t0: SH.check, near: 0.02, cam: (u) => { const c = TK.mesh.getWorldPosition(v3(0, 0, 0)); const n = v3(0, 0, 1).applyQuaternion(TK.mesh.getWorldQuaternion(new THREE.Quaternion())); return { p: c.clone().addScaledVector(n, lerp(0.34, 0.28, u)).add(v3(0, 0.03, 0)), l: c, fov: 40 }; }, fill: 0.7, dof: ['ticket', 0.03] },
     { id: 'appel', t0: SH.appel, cam: (u) => ({ p: R(lerp(1.4, 1.2, u), 1.55, lerp(1.9, 1.7, u)), l: R(-0.2, 1.35, 0.0), fov: 50 }), fill: 0.5 },
@@ -181,7 +182,7 @@ export default async function () {
     const shop = ['tabac', 'ticket', 'end'].includes(S.id), room = ['tirage', 'check', 'appel'].includes(S.id), multi = S.id === 'multi';
     poseAll(ts, S.id);
     // les lumières de chaque décor (on retire celles des autres décors)
-    TB.on(shop ? 1 : 0); bedLamp.intensity = room ? 2.6 : 0; CH.winL.intensity = room ? 6 : 0; CH.amb.intensity = room ? 0.2 : 0; key.intensity = multi ? 190 : 0; rim.intensity = multi ? 1.1 : 0;
+    TB.on(shop ? (S.id === 'ticket' ? 0.3 : 1) : 0); bedLamp.intensity = room ? 2.6 : 0; CH.winL.intensity = room ? 6 : 0; CH.amb.intensity = room ? 0.2 : 0; key.intensity = multi ? 190 : 0; rim.intensity = multi ? 1.1 : 0;
     hemi.intensity = multi ? 0.4 : 0.3;
     // la télé : les boules sortent une par une pendant le tirage ; le ticket se coche pendant la vérification
     const balls = S.id === 'tirage' ? 1 + 6 * clamp((ts - SH.tirage - 0.3) / 2.0) : room ? 7 : 0; TV.draw(balls); TV.light.intensity = room ? 1.8 : 0;
@@ -189,8 +190,7 @@ export default async function () {
     // l'effet multiplication
     const nA = pileA.update(multi ? ts : 0), nB = pileB.update(multi ? ts : 0);
     hero.mesh.visible = multi && ts < T_A0 + 0.6; hero.mesh.rotation.y = (ts - SH.multi) * 0.6; hero.mark(0);
-    eq1.opacity(multi ? sm(SH.multi + 3.0, SH.multi + 3.4, ts) * (1 - sm(T_B0 - 0.2, T_B0, ts)) : 0); eq2.opacity(multi ? sm(T_B0 + 0.4, T_B0 + 0.8, ts) : 0);
-    eq1.set(0, fr(Math.round(GRILLES * nA / NA)));
+    eq1.opacity(multi ? sm(T_A1, T_A1 + 0.4, ts) * (1 - sm(T_B0 - 0.2, T_B0, ts)) : 0); eq2.opacity(multi ? sm(T_B1 - 0.2, T_B1 + 0.2, ts) : 0);
     // la caméra
     const C = S.cam(u);
     camera.near = S.near ?? 0.1; camera.fov = C.fov; camera.up.copy(C.up ?? v3(0, 1, 0)); camera.position.copy(C.p); camera.lookAt(C.l); camera.clearViewOffset();
@@ -214,7 +214,7 @@ export default async function () {
       const k = nA / NA; HUD.block(1, { label: 'GRILLES POSSIBLES', value: fr(Math.round(GRILLES * k)), sub: '', color: '#fff' });
       HUD.block(2, { label: 'POUR TOUT JOUER', value: `${fr(Math.round(ALL * k))} €`, sub: nB > 0 ? `JACKPOT MAX : ${fr(Math.round(MAXJ * nB / NB))} €` : '', color: '#ffcf6b', subColor: '#ff8a7a' }); HUD.show2(ts > T_A0);
     } else if (S.id === 'ticket') { HUD.block(1, { label: 'TA MISE', value: '2,50 €', sub: '1 GRILLE' }); HUD.show2(false); }
-    else if (S.id === 'appel') { HUD.block(1, { label: 'GAIN DE 500 000 € OU PLUS', value: 'FDJ', sub: 'ÉQUIPE DES GRANDS GAGNANTS', color: '#ffcf6b' }); HUD.show2(false); }
+    else if (S.id === 'appel') { HUD.block(1, { label: 'GAIN DE 500 000 € OU PLUS', value: 'FDJ', sub: 'APPEL EN COURS · ÉQUIPE DES GRANDS GAGNANTS', color: '#ffcf6b' }); HUD.show2(false); }
     else HUD.show2(false);
     document.getElementById('tl').style.opacity = (multi && ts > T_A0 - 0.2) || S.id === 'ticket' || S.id === 'appel' ? 1 : 0;
     document.getElementById('tr').style.opacity = sm(T.hookOut - 0.2, T.hookOut + 0.3, t) * (1 - sm(FZ.realT(T.endCard) - 0.3, FZ.realT(T.endCard), t));

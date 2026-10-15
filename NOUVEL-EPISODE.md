@@ -114,3 +114,11 @@ Testé sur `episodes/vol-voiture` (15/10/2026), inspiré des reconstitutions 3D 
   `flat: true` pour le courant dans l'herbe), `strike(ts, t0)` (3 flashs en 0,15 s puis la lueur retombe).
   Attention : un éclair proche de la caméra a vite l'air d'un brouillard blanc (le halo et le « bloom ») : des éclairs fins et peu de halo de près.
   En vue aérienne, `P.hot()` faible quand la caméra est proche (sinon le halo blanc mange l'image).
+- `lib-nuit.js` (sommeil) : `buildBedroom()` (chambre avec vue sur Lyon, réveil aux chiffres rouges, nuit ou jour), `buildHighway()` (A7 :
+  3 voies, bande sonore, glissière, lampadaires dont seuls les 3 plus proches éclairent). `lib-tabac.js` (EuroMillions) : `buildTabac()`,
+  `makeTicket()` (grille générique qui se coche), `makeTV()` (le tirage). `lib-gare.js` (Internet) : `buildHall()` (hall de gare, tableau des
+  départs, café et terminal de paiement, distributeur), `makePhoneScreen()` (« aucune connexion » ou carte vide), `makeKit()` (kit d'urgence).
+- Masques d'animation (`lib-mixamo.js`) : `P.pose([['sit', t, 1, LOWER], ['texting', t, 1, UPPER]])` = assis (le bas) + téléphone (le haut).
+- **Rendu rapide** : une lampe éteinte (intensité 0) coûte quand même du calcul à chaque pixel. Dans `update()`, après avoir réglé les
+  lumières : `for (const l of LIGHTS) l.visible = l.intensity > 0;` (le rendu du sommeil est passé de ~17 à plus de 60 images/minute).
+- Attention aux commentaires `//` ajoutés au milieu d'une ligne : tout ce qui suit est ignoré (ça a déjà « effacé » une voiture et un terminal).
