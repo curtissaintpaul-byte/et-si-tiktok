@@ -187,10 +187,11 @@ export function buildStreet(scene, { night = true, seed = 4 } = {}) {
   }
   scene.add(bake(world));
   // la lumière des réverbères (des projecteurs vers le bas ; les deux plus proches de la maison font des ombres)
+  const LL = [];
   if (night) lamps.forEach((p, i) => {
-    const L = new THREE.SpotLight('#ffa95c', i < 2 ? 260 : 160, 34, 1.05, 0.55, 1.6); L.position.copy(p); L.target.position.set(p.x, 0, p.z);
+    const L = new THREE.SpotLight('#ffa95c', i < 2 ? 260 : 160, 34, 1.05, 0.55, 1.6); L.position.copy(p); L.target.position.set(p.x, 0, p.z); LL.push(L); L.userData.on = L.intensity;
     if (i < 2) { L.castShadow = true; L.shadow.mapSize.set(512, 512); L.shadow.bias = -0.0008; L.shadow.normalBias = 0.03; }
     scene.add(L, L.target);
   });
-  return { world, lamps, MAIN, door: new THREE.Vector3(-0.4, 1.1, -10.95), key: new THREE.Vector3(-1.0, 0.93, -11.7), drive: new THREE.Vector3(3.25, 0, -8.6) };
+  return { world, lamps, lights: LL, MAIN, door: new THREE.Vector3(-0.4, 1.1, -10.95), key: new THREE.Vector3(-1.0, 0.93, -11.7), drive: new THREE.Vector3(3.25, 0, -8.6) };
 }
