@@ -15,7 +15,13 @@ Puis `studio/get-models.sh` : télécharge le personnage réaliste (Michelle, Mi
 
 ## 1. Choisir l'idée
 Règle de Curtis pour les idées : surtout des questions que tout le monde peut se poser, intéressantes et variées, pas que l'espace (au maximum une idée « espace » sur trois). Exemples : « Et si les dinosaures existaient de nos jours ? », « Et si tu conduisais une F1 comme un pilote ? », « Et si tu étais l'homme le plus riche du monde ? ».
-Point de vue : toujours une personne lambda (« toi »). On montre ce qui arriverait à TON corps et à ta vie, avec les risques concrets pour ta santé illustrés à l'écran (silhouette du corps avec les zones touchées, compteur de ce que tu ressens : poids ressenti, rythme cardiaque, température…). Exemple F1 : pas la vie du pilote, mais le cou d'un conducteur normal qui lâche au premier freinage, la vue qui se brouille dans les virages, la chaleur, le cœur qui s'emballe.
+**L'esprit du format (règle de Curtis, 15/10/2026, prioritaire sur le reste)** : on est des raconteurs d'une réalité qui PEUT arriver.
+Un « Et si » montre UNE des réalités possibles (parfois utopique, parfois dystopique), sans dire que ce sera forcément celle-là.
+On part de vrais faits sourcés, puis on va plus loin à chaque étape, tant que ça reste plausible (jamais d'impossible : on doit se dire
+« ouais, ça peut arriver »). L'histoire avance dans le temps (heures, jours, semaines…), chaque étape plus forte que la précédente.
+Pas un reportage de prévention : pas de conseils de sécurité ni de « bon réflexe » officiel en conclusion, sauf si ça sert l'histoire.
+**Un seul personnage à l'écran → il a un prénom** et on raconte son histoire (la question d'accroche reste en « tu »).
+Point de vue : toujours une personne lambda. On montre ce qui arriverait à TON corps et à ta vie, avec les risques concrets pour ta santé illustrés à l'écran (silhouette du corps avec les zones touchées, compteur de ce que tu ressens : poids ressenti, rythme cardiaque, température…). Exemple F1 : pas la vie du pilote, mais le cou d'un conducteur normal qui lâche au premier freinage, la vue qui se brouille dans les virages, la chaleur, le cœur qui s'emballe.
 Dans Notion, prendre la ligne au statut « 👍 Validée » la plus ancienne. La passer en « 🎬 En fabrication ».
 Ne jamais prendre une ligne au statut « 🎞 Reconstitution » : ces idées sont réservées au format reconstitution (style PS2, plans courts, persos Mixamo qui ne sont que sur l'ordi de Curtis), fabriqué avec Claude à raison d'une par semaine (voir l'annexe en bas).
 
