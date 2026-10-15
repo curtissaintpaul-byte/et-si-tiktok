@@ -17,6 +17,7 @@ Puis `studio/get-models.sh` : télécharge le personnage réaliste (Michelle, Mi
 Règle de Curtis pour les idées : surtout des questions que tout le monde peut se poser, intéressantes et variées, pas que l'espace (au maximum une idée « espace » sur trois). Exemples : « Et si les dinosaures existaient de nos jours ? », « Et si tu conduisais une F1 comme un pilote ? », « Et si tu étais l'homme le plus riche du monde ? ».
 Point de vue : toujours une personne lambda (« toi »). On montre ce qui arriverait à TON corps et à ta vie, avec les risques concrets pour ta santé illustrés à l'écran (silhouette du corps avec les zones touchées, compteur de ce que tu ressens : poids ressenti, rythme cardiaque, température…). Exemple F1 : pas la vie du pilote, mais le cou d'un conducteur normal qui lâche au premier freinage, la vue qui se brouille dans les virages, la chaleur, le cœur qui s'emballe.
 Dans Notion, prendre la ligne au statut « 👍 Validée » la plus ancienne. La passer en « 🎬 En fabrication ».
+Ne jamais prendre une ligne au statut « 🎞 Reconstitution » : ces idées sont réservées au format reconstitution (style PS2, plans courts, persos Mixamo qui ne sont que sur l'ordi de Curtis), fabriqué avec Claude à raison d'une par semaine (voir l'annexe en bas).
 
 ## 2. Vérifier les faits AVANT d'écrire la scène
 - Chaque chiffre affiché ou dit dans un sous-titre doit venir d'une source sérieuse (NASA, ESA, articles scientifiques, organismes officiels) ou d'un calcul physique refait en Python. Pas de bêtise, pas d'approximation présentée comme exacte.
@@ -104,3 +105,12 @@ Testé sur `episodes/vol-voiture` (15/10/2026), inspiré des reconstitutions 3D 
   `studio/models/mixamo/`, `leger/anim/*.glb` → `studio/models/mixamo/anim/`. Nouveau perso ou animation : le télécharger sur mixamo.com
   (compte de Curtis), puis FBX2glTF + `gltf-transform resize --width 512` (npm `fbx2gltf`, `@gltf-transform/cli`).
   Les animations médicales (massage cardiaque, toux, malaise…) sont pour Tactea : `leger/tactea/`, à garder séparées d'« Et si ».
+  Exception : 4 animations génériques de ce pack ont été copiées dans `studio/models/mixamo/anim/` pour la foudre : `fallback` (chute en arrière),
+  `liedown`, `cpr` (faire un massage) et `cprrecv` (le recevoir). `cpr` et `cprrecv` vont ensemble : même position, même orientation.
+- **La série « reconstitution »** (choisie par Curtis le 15/10/2026, une par semaine, statut Notion « 🎞 Reconstitution », jamais par le robot) :
+  1) foudre (`episodes/foudre`, 15/10), 2) ne plus dormir, 3) gagner à l'EuroMillions, 4) Internet coupé 24 h.
+- `lib-orage.js` : `buildPlateau()` (haut plateau façon Aubrac : herbe, chemin, murets, granit, buron, arbre isolé), `stormSky()` (nuages,
+  rideaux de pluie à l'horizon, flash), `makeRain()` (pluie en traits de 1 pixel), `makeBolt()` (éclair : ligne brisée + branches ;
+  `flat: true` pour le courant dans l'herbe), `strike(ts, t0)` (3 flashs en 0,15 s puis la lueur retombe).
+  Attention : un éclair proche de la caméra a vite l'air d'un brouillard blanc (le halo et le « bloom ») : des éclairs fins et peu de halo de près.
+  En vue aérienne, `P.hot()` faible quand la caméra est proche (sinon le halo blanc mange l'image).
