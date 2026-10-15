@@ -34,8 +34,8 @@ def steps(a, b, period, g, pan):
         tt, n = S.burst(0.09); s = bp(S.noise(n), 600, 3200) * np.exp(-tt * 55) + 0.6 * lp(S.noise(n), 300) * np.exp(-tt * 35)
         k = float((street + 0.3 * aerial)[min(N - 1, int(x * SR))])
         sfx.put(s, pan, x, g * k); x += period + rng.uniform(-0.02, 0.02)
-steps(1.5, rt(SH['porte'] + 2.2), 0.52, 0.05, -0.2)
-steps(1.6, rt(SH['porte'] + 3.0), 0.5, 0.04, 0.25)
+steps(0.5, rt(7.8), 0.52, 0.05, -0.2)    # James : jusqu'à la porte (7,8 s)
+steps(0.6, rt(9.3), 0.5, 0.04, 0.25)     # Leonard : jusqu'à la portière (9,3 s)
 
 # --- la vue aérienne : la radio du drone (souffle, sifflement fin) et un bip de repérage sur la voiture
 for k in ['air1', 'air2']:

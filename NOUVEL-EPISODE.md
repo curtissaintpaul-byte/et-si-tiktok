@@ -97,3 +97,10 @@ Testé sur `episodes/vol-voiture` (15/10/2026), inspiré des reconstitutions 3D 
   l'intérieur), `keyFob()`, `relayBox()`.
 - `lib-people.js` → `loadHooded()` : silhouettes à capuche (modèle Soldier teinté sombre) avec ses animations Idle/Walk/Run + des os tordus par-dessus.
 - Limite : pas de vrais visages d'hommes réalistes (on n'a que Michelle et Soldier). On filme de dos, en capuche, ou on passe par Higgsfield (crédits).
+- **Vrais persos et animations Mixamo** (15/10/2026) : `lib-mixamo.js` → `loadMixamo({ chars, anims })`, `CAST.make('James')`,
+  `P.pose('walk', t)` ou un mélange `P.pose([['walk', t, 0.3], ['texting', t, 0.7]])`, `P.hold(objet, 'RightHand', …)`, `balaclava(P)` (cagoule noire).
+  Les fichiers ne vont JAMAIS sur GitHub (licence Mixamo). Ils sont sur l'ordi de Curtis : `Téléchargements/mixamo/` (FBX d'origine)
+  et `Téléchargements/mixamo/leger/` (GLB allégés, 50 Mo). Pour les remettre dans l'atelier (ordi relié) : récupérer `leger/*.glb` →
+  `studio/models/mixamo/`, `leger/anim/*.glb` → `studio/models/mixamo/anim/`. Nouveau perso ou animation : le télécharger sur mixamo.com
+  (compte de Curtis), puis FBX2glTF + `gltf-transform resize --width 512` (npm `fbx2gltf`, `@gltf-transform/cli`).
+  Les animations médicales (massage cardiaque, toux, malaise…) sont pour Tactea : `leger/tactea/`, à garder séparées d'« Et si ».

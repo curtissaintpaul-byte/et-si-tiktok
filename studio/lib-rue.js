@@ -90,7 +90,7 @@ export function makeSUV(color = '#5b6066') {
   const dashL = new THREE.PointLight('#7fc8ff', 0, 2.2, 1.2); dashL.position.set(0.45, 1.12, -0.38); g.add(dashL);   // le tableau de bord éclaire le visage du conducteur
   const headL = new THREE.SpotLight('#fff3dc', 0, 30, 0.5, 0.6, 1.5); headL.position.set(2.3, 0.85, 0); headL.target.position.set(10, 0, 0); g.add(headL, headL.target);
   return {
-    root: g, paint, glass,
+    root: g, paint, glass, ghMesh: gh,
     lights({ blink: b = 0, inside = 0, dash: d = 0, head: hd = 0, brake = 0 } = {}) {
       blink.emissiveIntensity = 7 * b; blinkL.intensity = 6 * b; dome.emissiveIntensity = 1.6 * inside; domeL.intensity = 2.2 * inside;
       dash.emissiveIntensity = 1.5 * d; dashL.intensity = 9 * d; head.emissiveIntensity = 2.5 * hd; headL.intensity = 40 * hd; tail.emissiveIntensity = 0.9 * hd + 2.2 * brake;

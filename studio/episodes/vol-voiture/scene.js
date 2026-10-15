@@ -15,12 +15,15 @@
 //     prise OBD est majoritaire selon le ministère).
 // =====================================================================
 import { THREE, createStage, makeSky, HUD, sm, lerp, clamp, rng, keys, pad, M, box, add } from '../../engine.js';
-import { loadHooded } from '../../lib-people.js';
+import { loadMixamo, balaclava } from '../../lib-mixamo.js';
 import { makeFreeze, zoomView } from '../../lib-freeze.js';
 import { makePS2, ps2Textures, pixTex } from '../../lib-ps2.js';
 import { buildStreet, makeSUV, keyFob, relayBox } from '../../lib-rue.js';
 
 const Q = new URLSearchParams(location.search);
+const HOLD_BOX = { off: [0.0, 0.1, 0.045], rot: [0, 0, 0] };   // le boîtier dans la paume (repère de l'os de la main)
+const TEXT0 = 2.0;                                            // à quel moment de l'animation « texting » on démarre (téléphone levé)
+const DRIVER = new THREE.Vector3(-0.42, 0.25, -0.4);          // le bassin du conducteur (repère de la voiture)
 const V = new THREE.Vector3, v3 = (x, y, z) => new THREE.Vector3(x, y, z);
 // --- le découpage (temps de la scène, en secondes) : un plan = un cadre, une caméra, un « look »
 const SH = { rue: 0, air1: 3.0, porte: 5.6, boitier: 8.6, voiture: 11.2, habitacle: 14.6, air2: 17.2, tableau: 19.8, parade: 23.4, end: 27.4 };
@@ -76,40 +79,36 @@ export default async function () {
   const KEY = keyFob(); KEY.position.copy(RUE.key); KEY.scale.setScalar(1.6); scene.add(KEY);
   box(0.9, 0.06, 0.35, M('#5a4636'), scene, RUE.key.x, RUE.key.y - 0.05, RUE.key.z);
 
-  // --- les deux voleurs : des silhouettes à capuche, tout en sombre (le modèle « Soldier » teinté)
-  const HOOD = await loadHooded();
-  const A = HOOD.make({ tint: '#33353b' }), B = HOOD.make({ tint: '#2a2f3a' });   // A : le boîtier contre la porte ; B : le boîtier à la portière
-  scene.add(A.root, B.root); ps2Textures(A.root, 96); ps2Textures(B.root, 96);
+  // --- les deux voleurs : Josh et Leonard (Mixamo), vêtements sombres, cagoule noire (moulée sur leur tête)
+  const CAST = await loadMixamo({ chars: ['Josh', 'Leonard'], anims: ['idle', 'walk', 'texting', 'lookaround', 'driving'] });
+  const A = CAST.make('Josh', { height: 1.8 }), B = CAST.make('Leonard', { height: 1.78 });   // A : le boîtier contre la porte ; B : le boîtier à la portière
+  scene.add(A.root, B.root); balaclava(A); balaclava(B);
   const boxA = relayBox(false), boxB = relayBox(true);
-  scene.add(boxA.root, boxB.root);   // (les boîtiers suivent la main, mais restent droits, l'écran tourné vers le voleur)
-  const holdBox = (bx, P, hand) => { const h = P.point(hand); const f = v3(Math.sin(P.root.rotation.y), 0, Math.cos(P.root.rotation.y)); bx.root.position.copy(h).addScaledVector(f, 0.13).add(v3(0, 0.05, 0)); bx.root.rotation.set(0, P.root.rotation.y, 0); };
+  A.hold(boxA.root, 'RightHand', HOLD_BOX); B.hold(boxB.root, 'RightHand', HOLD_BOX);   // le boîtier dans la main, comme un téléphone
   const hot = (P, k) => P.hot(k);
 
-  // les voleurs : où ils sont et ce qu'ils font, à chaque instant (temps de scène)
-  const PATH_A = [[1.5, -8.0, -4.6], [SH.porte - 0.2, -1.0, -4.8], [SH.porte + 1.0, -0.6, -7.2], [SH.porte + 2.2, -0.45, -10.15]];
-  const PATH_B = [[1.5, -9.6, -4.4], [SH.porte - 0.2, -2.4, -4.5], [SH.porte + 1.7, 1.95, -5.2], [SH.porte + 3.0, 1.8, -8.55]];
+  // les voleurs : où ils sont et ce qu'ils font, à chaque instant (temps de scène) ; ils marchent à ~1,5 m/s
+  const PATH_A = [[0.5, -7.0, -4.6], [4.2, -1.0, -4.8], [5.9, -0.6, -7.2], [7.8, -0.45, -10.2]];
+  const PATH_B = [[0.5, -8.5, -4.4], [4.4, -2.4, -4.5], [7.2, 1.95, -5.2], [9.3, 1.85, -8.5]];
   function along(PTH, ts) {
     if (ts <= PTH[0][0]) return { p: v3(PTH[0][1], 0, PTH[0][2]), walking: false, dir: v3(1, 0, 0) };
     for (let i = 1; i < PTH.length; i++) { const [t1, x1, z1] = PTH[i], [t0, x0, z0] = PTH[i - 1]; if (ts <= t1) { const k = (ts - t0) / (t1 - t0); return { p: v3(lerp(x0, x1, k), 0, lerp(z0, z1, k)), walking: true, dir: v3(x1 - x0, 0, z1 - z0).normalize() }; } }
     const L = PTH[PTH.length - 1], P2 = PTH[PTH.length - 2]; return { p: v3(L[1], 0, L[2]), walking: false, dir: v3(L[1] - P2[1], 0, L[2] - P2[2]).normalize() };
   }
-  const HOLD_R = (k) => ({ RightArm: [['x', -1.15 * k]], RightForeArm: [['x', -0.45 * k]], Head: [['x', 0.15 * k]] });   // le bras tendu, le boîtier contre la porte
-  const HOLD_L = (k) => ({ LeftArm: [['x', -1.05 * k]], LeftForeArm: [['x', -0.5 * k]], Head: [['x', 0.2 * k], ['y', -0.25 * k]] });
-  const DRIVE = { LeftUpLeg: [['x', -1.45]], RightUpLeg: [['x', -1.45]], LeftLeg: [['x', 1.35]], RightLeg: [['x', 1.35]], LeftArm: [['x', -0.95]], RightArm: [['x', -0.95]], LeftForeArm: [['x', -0.45]], RightForeArm: [['x', -0.45]], Spine: [['x', -0.1]] };
   function poseThieves(ts) {
-    // A : il marche jusqu'à la porte puis tend le boîtier ; il reste là tout le vol
-    const a = along(PATH_A, ts); A.root.position.copy(a.p);
-    if (a.walking) { A.pose('Walk', ts); A.root.rotation.y = Math.atan2(a.dir.x, a.dir.z); }
-    else if (ts > PATH_A[3][0]) { A.pose('Idle', ts, HOLD_R(sm(PATH_A[3][0], PATH_A[3][0] + 0.6, ts))); A.root.rotation.y = Math.PI; }
-    else { A.pose('Idle', ts); A.root.rotation.y = Math.PI / 2; }
-    // B : il va à la portière du conducteur, tend son boîtier ; puis il est au volant (plan habitacle), puis il est parti
+    // A : il marche jusqu'à la porte, puis regarde l'écran de son boîtier, collé à la porte ; il reste là tout le vol
+    const a = along(PATH_A, ts), endA = PATH_A[3][0]; A.root.position.copy(a.p);
+    if (a.walking) { A.pose('walk', ts * 1.1); A.root.rotation.y = Math.atan2(a.dir.x, a.dir.z); }
+    else if (ts > endA) { const k = sm(endA, endA + 0.5, ts); A.pose([['walk', endA * 1.1, 1 - k], ['texting', ts - endA + TEXT0, k]]); A.root.rotation.y = Math.PI; }
+    else { A.pose('idle', ts); A.root.rotation.y = Math.PI / 2; }
+    // B : il va à la portière du conducteur avec son boîtier ; puis il est au volant (plan habitacle), puis il est parti
     const inCar = ts >= SH.habitacle && ts < SH.air2 + 0.2;
     B.root.visible = ts < SH.air2 + 0.2;
-    if (inCar) { B.pose('Idle', 0, DRIVE); B.root.position.copy(car.root.localToWorld(v3(-0.5, -0.18, -0.4))); B.root.rotation.y = car.root.rotation.y + Math.PI / 2; return; }
-    const b = along(PATH_B, ts); B.root.position.copy(b.p);
-    if (b.walking) { B.pose('Walk', ts + 0.4); B.root.rotation.y = Math.atan2(b.dir.x, b.dir.z); }
-    else if (ts > PATH_B[3][0]) { B.pose('Idle', ts, HOLD_L(sm(PATH_B[3][0], PATH_B[3][0] + 0.6, ts))); B.root.rotation.y = Math.PI / 2; }
-    else { B.pose('Idle', ts); B.root.rotation.y = Math.PI / 2; }
+    if (inCar) { B.pose('driving', ts - SH.habitacle); B.root.position.copy(car.root.localToWorld(DRIVER.clone())); B.root.rotation.y = car.root.rotation.y + Math.PI / 2; return; }
+    const b = along(PATH_B, ts), endB = PATH_B[3][0]; B.root.position.copy(b.p);
+    if (b.walking) { B.pose('walk', ts * 1.1 + 0.4); B.root.rotation.y = Math.atan2(b.dir.x, b.dir.z); }
+    else if (ts > endB) { const k = sm(endB, endB + 0.5, ts); B.pose([['walk', endB * 1.1 + 0.4, 1 - k], ['texting', ts - endB + TEXT0 + 1.3, k]]); B.root.rotation.y = Math.PI / 2; }
+    else { B.pose('idle', ts); B.root.rotation.y = Math.PI / 2; }
   }
 
   // --- le décor du gros plan d'objets : une table grise (loin de la rue), la clé et la pochette
@@ -117,16 +116,21 @@ export default async function () {
   const tableTex = pixTex(64, 64, (g, w, h) => { const r = rng(11); g.fillStyle = '#5c5e61'; g.fillRect(0, 0, w, h); for (let i = 0; i < 1600; i++) { const v = 80 + (r() * 40) | 0; g.fillStyle = `rgb(${v},${v},${v + 2})`; g.globalAlpha = 0.35; g.fillRect(r() * w | 0, r() * h | 0, 1, 1); } }, 3);
   add(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ map: tableTex, roughness: 0.95 }), scene, TBL.x, TBL.y, TBL.z, -Math.PI / 2, 0, 0);
   const tl = new THREE.SpotLight('#fff1dd', 7, 6, 0.7, 0.8, 1.2); tl.position.copy(TBL).add(v3(-0.8, 1.6, 0.6)); tl.target.position.copy(TBL); tl.castShadow = true; tl.shadow.mapSize.set(512, 512); scene.add(tl, tl.target);
-  const KEY2 = keyFob(); KEY2.scale.setScalar(2.2); scene.add(KEY2);
-  const pouch = new THREE.Group(); scene.add(pouch); pouch.position.copy(TBL).add(v3(0.06, 0.012, 0));
+  // la pochette : un vrai « fourreau » ouvert d'un côté (la clé entre dedans et disparaît), avec un rabat qui se referme
+  const KEY2 = keyFob(); KEY2.scale.setScalar(1.5); scene.add(KEY2);
+  const pouch = new THREE.Group(); scene.add(pouch); pouch.position.copy(TBL).add(v3(0.05, 0, 0));
   const fabric = pixTex(16, 16, (g, w, h) => { g.fillStyle = '#2b2d31'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(255,255,255,.07)'; for (let i = 0; i < w; i += 2) g.fillRect(i, 0, 1, h); }, 4);
-  const pm = new THREE.MeshStandardMaterial({ map: fabric, roughness: 1 });
-  box(0.13, 0.022, 0.2, pm, pouch, 0, 0, 0); const flap = new THREE.Group(); flap.position.set(0, 0.012, -0.1); pouch.add(flap); box(0.13, 0.006, 0.07, pm, flap, 0, 0, 0.035);
-  box(0.13, 0.003, 0.012, M('#c9cbd0', { r: 0.3, m: 0.7, nc: true }), pouch, 0, 0.012, 0.07);   // bande argentée
-  const keyTable = (ts) => {   // la clé glisse dans la pochette, puis le rabat se ferme
-    const u = ts - SH.parade; const k = sm(0.9, 2.0, u);
-    KEY2.position.copy(TBL).add(v3(lerp(-0.2, 0.06, k), 0.016 + 0.02 * Math.sin(Math.PI * k), lerp(0.14, -0.01, k))); KEY2.rotation.set(0, lerp(0.7, 0, k), 0);
-    KEY2.visible = k < 0.98; flap.rotation.x = -lerp(2.6, 0, sm(2.2, 2.8, u)) ;
+  const pm = new THREE.MeshStandardMaterial({ map: fabric, roughness: 1 }), PL = 0.19, PW = 0.11, PH = 0.032;
+  box(PL, 0.004, PW, pm, pouch, 0, 0.002, 0); box(PL, 0.004, PW, pm, pouch, 0, PH, 0);                  // dessous, dessus
+  for (const sz of [-1, 1]) box(PL, PH, 0.004, pm, pouch, 0, PH / 2, sz * (PW / 2 - 0.002));            // les côtés
+  box(0.004, PH, PW, pm, pouch, PL / 2, PH / 2, 0);                                                    // le fond (l'ouverture est côté -x)
+  box(0.12, 0.002, 0.03, M('#c9cbd0', { r: 0.3, m: 0.7, nc: true }), pouch, 0.02, PH + 0.003, 0);     // la bande argentée
+  const hinge = new THREE.Group(); hinge.position.set(-PL / 2, PH, 0); pouch.add(hinge);
+  box(0.055, 0.003, PW, pm, hinge, 0.0275, 0.0015, 0);                                                 // le rabat (posé à plat quand l'angle vaut 0)
+  const keyTable = (ts) => {   // la clé glisse dans l'ouverture et disparaît, puis le rabat se rabat devant l'ouverture
+    const u = ts - SH.parade, k = sm(0.8, 2.1, u);
+    KEY2.position.copy(pouch.position).add(v3(lerp(-0.3, 0.05, k), PH / 2 + 0.002 + 0.03 * (1 - sm(0.55, 0.85, k)) * Math.sin(Math.PI * Math.min(1, k * 1.4)), 0)); KEY2.rotation.set(0, Math.PI / 2 + lerp(0.5, 0, sm(0, 0.7, k)), 0);
+    hinge.rotation.z = lerp(Math.PI / 2, Math.PI * 1.5, sm(2.3, 2.9, u));   // ouvert (levé) → refermé (pend devant l'ouverture)
   };
 
   // --- le tableau d'enquête (rouge) : des fiches reliées par des fils, photos prises dans la scène 3D
@@ -142,8 +146,8 @@ export default async function () {
   let board = null;
   function makeBoard() {
     // les photos : la clé, le voleur A, le voleur B, la voiture (une « photo d'identité » de chacun)
-    poseThieves(SH.boitier); A.pose('Idle', 0); B.pose('Idle', 0); A.root.rotation.y = 0; B.root.rotation.y = 0; scene.updateMatrixWorld(true);
-    const headOf = (P) => P.point('Head').add(v3(0, 0.1, 0));
+    poseThieves(SH.boitier); A.pose('idle', 0); B.pose('idle', 0); A.root.rotation.y = 0; B.root.rotation.y = 0; scene.updateMatrixWorld(true);
+    const headOf = (P) => P.point('Head').add(v3(0, 0.07, 0));
     const photos = [
       snap(KEY.position.clone().add(v3(0.12, 0.22, 0.12)), KEY.position, 30),
       snap(headOf(A).add(v3(0, -0.04, 0.9)), headOf(A).add(v3(0, -0.06, 0)), 22),
@@ -217,13 +221,13 @@ export default async function () {
   const SHOTS = [
     { id: 'rue', t0: SH.rue, cam: (u) => ({ p: v3(lerp(5.2, 4.3, u), lerp(1.5, 1.45, u), lerp(3.6, 2.5, u)), l: v3(lerp(2.4, 2.6, u), 1.6, -9.5), fov: 46 }), dof: [0] },
     { id: 'air1', t0: SH.air1, cam: (u) => ({ p: v3(lerp(-6, 0.5, u), 90, lerp(-3.5, -6.0, u)), l: v3(lerp(-6, 0.5, u) + 0.01, 0, lerp(-3.5, -6.0, u) - 0.01), fov: lerp(46, 17, sm(0, 1, u)), up: v3(0, 0, -1) }), look: 'aerial' },
-    { id: 'porte', t0: SH.porte, cam: (u) => ({ p: v3(lerp(-3.4, -3.0, u), 0.55, lerp(-7.0, -7.3, u)), l: v3(lerp(-0.9, -0.7, u), 1.2, -10.4), fov: 52 }), dof: ['thiefA', 0.006] },
+    { id: 'porte', t0: SH.porte, cam: (u) => ({ p: v3(lerp(-1.0, -0.85, u), lerp(0.55, 0.6, u), lerp(-6.3, -6.6, u)), l: v3(-0.45, 1.25, -10.8), fov: 50 }), dof: ['thiefA', 0.006] },
     { id: 'boitier', t0: SH.boitier, near: 0.03, fill: 0.35, cam: (u) => { const b = boxA.root.getWorldPosition(new THREE.Vector3()); return { p: b.clone().add(v3(lerp(0.52, 0.42, u), lerp(0.07, 0.05, u), lerp(0.3, 0.24, u))), l: b.clone().add(v3(-0.08, -0.01, -0.1)), fov: 40 }; }, dof: ['box', 0.03] },
-    { id: 'voiture', t0: SH.voiture, fill: 0.5, cam: (u) => ({ p: v3(lerp(0.35, 0.6, u), lerp(1.8, 1.7, u), lerp(-6.95, -7.1, u)), l: v3(lerp(2.9, 3.0, u), 0.95, -9.9), fov: 58 }), dof: ['thiefB', 0.005] },
+    { id: 'voiture', t0: SH.voiture, fill: 0.5, cam: (u) => ({ p: v3(lerp(0.15, 0.4, u), 1.55, lerp(-10.45, -10.25, u)), l: v3(2.45, 0.95, lerp(-8.2, -8.4, u)), fov: 56 }), dof: ['thiefB', 0.005] },
     { id: 'habitacle', t0: SH.habitacle, near: 0.03, fill: 0.2, cam: (u) => { const p = car.root.localToWorld(v3(0.3, 1.24, lerp(0.14, 0.08, u))); const l = B.point('Head').add(v3(0, -0.03, 0)); return { p, l, fov: lerp(50, 44, u) }; }, dof: ['thiefBface', 0.03] },
     { id: 'air2', t0: SH.air2, cam: (u) => ({ p: v3(lerp(4, 14, u), 90, lerp(-5, -2, u)), l: v3(lerp(4, 14, u) + 0.01, 0, lerp(-5, -2, u) - 0.01), fov: lerp(22, 28, u), up: v3(0, 0, -1) }), look: 'aerial' },
     { id: 'tableau', t0: SH.tableau, cam: (u) => ({ p: BRD.clone().add(v3(lerp(-0.5, 0.25, u), lerp(0.25, -0.1, u), lerp(6.6, 5.8, sm(0, 1, u)))), l: BRD.clone().add(v3(lerp(-0.1, 0.05, u), lerp(0.1, -0.15, u), 0)), fov: 46, up: v3(Math.sin(lerp(-0.04, 0.03, u)), 1, 0).normalize() }), dof: [0] },
-    { id: 'parade', t0: SH.parade, near: 0.02, cam: (u) => ({ p: TBL.clone().add(v3(lerp(-0.42, -0.34, u), lerp(0.3, 0.26, u), lerp(0.42, 0.36, u))), l: TBL.clone().add(v3(0.0, 0.0, 0.03)), fov: 40 }), dof: ['table', 0.035] },
+    { id: 'parade', t0: SH.parade, near: 0.02, cam: (u) => ({ p: TBL.clone().add(v3(lerp(-0.46, -0.4, u), lerp(0.2, 0.17, u), lerp(0.3, 0.26, u))), l: TBL.clone().add(v3(-0.04, 0.012, 0)), fov: 40 }), dof: ['table', 0.035] },
     { id: 'end', t0: SH.end, cam: () => ({ p: v3(8.6, 1.4, 7.2), l: v3(2.2, 1.5, -8.5), fov: 44 }) },
   ];
   const shotAt = (ts) => { let s = SHOTS[0]; for (const S of SHOTS) if (ts >= S.t0) s = S; return s; };
@@ -241,11 +245,11 @@ export default async function () {
     car.lights({ blink, inside: ts > unlock && ts < SH.habitacle ? 0.9 : 0, dash: ts > start ? 1 : 0, head: ts > start ? 1 : 0, brake: ts > SH.air2 && ts < SH.air2 + 1.5 ? 1 : 0 });
     boxA.set(ts > PATH_A[3][0] + 0.4, Math.floor(ts * 6) % 2 === 0); boxB.set(ts > PATH_B[3][0] + 0.4, Math.floor(ts * 6 + 1) % 2 === 0);
     keyTable(ts);
-    holdBox(boxA, A, 'RightHand'); holdBox(boxB, B, 'LeftHand'); boxB.root.visible = !(ts >= SH.habitacle);
+    boxB.root.visible = !(ts >= SH.habitacle);
     if (board) board.draw(clamp((ts - SH.tableau - 0.2) / 2.6));
     const air = S.look === 'aerial';
     hemi.intensity = air ? 5 : 0.8; moon.intensity = air ? 3 : 1.5;   // (vue aérienne : on « éclaire » comme une caméra infrarouge)
-    hot(A, air ? 2.2 : 0); hot(B, air ? 2.2 : 0);
+    hot(A, air ? 5 : 0); hot(B, air ? 5 : 0);
     // la caméra du plan
     const C = S.cam(u);
     camera.near = S.near ?? 0.1; camera.fov = C.fov; camera.up.copy(C.up ?? v3(0, 1, 0)); camera.position.copy(C.p); camera.lookAt(C.l); camera.clearViewOffset();
@@ -257,7 +261,7 @@ export default async function () {
     camera.updateProjectionMatrix(); sky.follow(camera);
     // flou de profondeur : une distance fixe, ou « la distance de l'objet visé »
     const d = S.dof || [0]; let focus = d[0];
-    const target = { thiefA: () => A.point('Spine2'), box: () => boxA.root.getWorldPosition(new THREE.Vector3()), thiefB: () => B.point('Spine2'), thiefBface: () => B.point('Head'), table: () => TBL.clone().add(v3(0, 0.01, 0.03)) }[focus];
+    const target = { thiefA: () => A.point('Spine2'), box: () => boxA.root.getWorldPosition(new THREE.Vector3()), thiefB: () => B.point('Spine2'), thiefBface: () => B.point('Head'), table: () => TBL.clone().add(v3(-0.04, 0.012, 0)) }[focus];
     if (target) focus = camera.position.distanceTo(target());
     PS.dof(frozen ? 0 : focus, d[1] ?? 0.02); PS.look(air ? 'aerial' : 'normal', { gain: air ? 2.3 : 1 });
     // la lumière d'appoint (comme sur un tournage) : une petite lampe près de la caméra pour les gros plans
@@ -278,6 +282,7 @@ export default async function () {
     drawOverlay(S.id, t, ts);
     HUD.end(t, FZ.realT(T.endCard), { kicker: 'SOURCES : MINISTÈRE DE L’INTÉRIEUR (SSMSI) · ADAC · POLICE DES WEST MIDLANDS', q: 'Et toi, ta clé<br>dort où ?', cta: 'RÉPONDS EN COMMENTAIRE' });
     FZ.draw(t, camera);
+    if (Q.get('dbg') === 'car') { console.log('[dbg] hips ' + (B.point('Hips').y - B.root.position.y).toFixed(3) + ' head ' + (B.point('Head').y - B.root.position.y).toFixed(3) + ' rootY ' + B.root.position.y.toFixed(3) + ' hipsXZ ' + B.root.worldToLocal(B.point('Hips')).toArray().map((v) => v.toFixed(2)).join(',')); camera.clearViewOffset(); const c = car.root.localToWorld(v3(-0.4, 1.0, 3.2)); camera.position.copy(c); camera.lookAt(car.root.localToWorld(v3(-0.4, 0.9, 0))); camera.fov = 40; camera.near = 0.05; camera.updateProjectionMatrix(); car.ghMesh.visible = false; PS.dof(0); }
     if (Q.get('nob')) B.root.visible = false; if (Q.get('nocar')) car.root.visible = false; if (Q.get('nodof')) PS.dof(0);
   }
   return { stage, T, update, events: () => ({ T, SH, subs: SUBS_V, freezes: FZ.events(), end: FZ.realT(T.endCard), cuts: SHOTS.map((s) => FZ.realT(s.t0)),
