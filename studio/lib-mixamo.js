@@ -25,6 +25,10 @@ const AX = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: ne
 const ONE_SHOT = new Set(['entercar', 'exitcar', 'opendoor', 'kneel']);   // animations qui ne bouclent pas (on s'arrête sur la dernière image)
 const loader = new GLTFLoader();
 
+/** masques d'os : le haut du corps (buste, tête, bras) ou le bas (bassin, jambes) — pour mélanger deux animations */
+export const UPPER = /^(Spine1|Spine2|Neck|Head|HeadTop_End|LeftShoulder|LeftArm|LeftForeArm|LeftHand.*|RightShoulder|RightArm|RightForeArm|RightHand.*|LeftEye|RightEye)$/;
+export const LOWER = /^(Hips|Spine|LeftUpLeg|LeftLeg|LeftFoot|LeftToeBase|LeftToe_End|RightUpLeg|RightLeg|RightFoot|RightToeBase|RightToe_End)$/;
+
 export async function loadMixamo({ chars = [], anims = [], dir = 'models/mixamo' } = {}) {
   const C = {}, A = {};
   await Promise.all(chars.map(async (n) => { C[n] = await loader.loadAsync(`${dir}/${n}.glb`); }));
@@ -67,7 +71,7 @@ export async function loadMixamo({ chars = [], anims = [], dir = 'models/mixamo'
         const m = tr.name.match(/^mixamorig\d*(.+)\.(quaternion|position)$/); if (!m || !B[m[1]]) continue;
         let t2 = tr; if (m[2] === 'position' && m[1] === 'Hips') { t2 = tr.clone(); const v = t2.values = tr.values.slice(); for (let i = 0; i < v.length; i++) v[i] *= k; }
         if (m[2] === 'position' && m[1] !== 'Hips') continue;                                  // (seul le bassin se déplace)
-        tracks.push({ bone: B[m[1]], kind: m[2], interp: t2.createInterpolant() });
+        tracks.push({ bone: B[m[1]], kind: m[2], interp: t2.createInterpolant(), name: m[1] });
       }
       acts[n] = { duration: clip.duration, tracks, getClip: () => clip };
     }
@@ -82,10 +86,11 @@ export async function loadMixamo({ chars = [], anims = [], dir = 'models/mixamo'
         for (const [o, q, p] of rest) { o.quaternion.copy(q); o.position.copy(p); }
         // le mélange des animations, os par os (poids total < 1 : on garde une part de la pose de repos)
         const acc = new Map();
-        for (const [n, tt, w] of list) {
+        for (const [n, tt, w, mask] of list) {   // mask (facultatif) : les os concernés, ex. UPPER ou LOWER (le haut d'un film, le bas d'un autre)
           const a = acts[n]; if (!a) { console.warn('animation inconnue', n); continue; } if (w <= 1e-4) continue;
           const d = a.duration, time = ONE_SHOT.has(n) ? Math.min(Math.max(0, tt), d - 1e-3) : ((tt % d) + d) % d;
           for (const tr of a.tracks) {
+            if (mask && !mask.test(tr.name)) continue;
             const v = tr.interp.evaluate(time), key = tr.bone.uuid + tr.kind;
             let e = acc.get(key); if (!e) { e = { bone: tr.bone, kind: tr.kind, w: 0, q: new THREE.Quaternion(), p: new THREE.Vector3() }; acc.set(key, e); }
             if (tr.kind === 'quaternion') { tq.fromArray(v); if (e.w === 0) e.q.copy(tq); else e.q.slerp(tq, w / (e.w + w)); }
