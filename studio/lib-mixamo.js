@@ -57,30 +57,46 @@ export async function loadMixamo({ chars = [], anims = [], dir = 'models/mixamo'
     body.traverse((o) => { if (o.isBone) { const m = o.name.match(/^(mixamorig\d*)(.+)$/); if (m) { prefix = m[1]; B[m[2]] = o; } } });
     const rest = []; body.traverse((o) => { if (o.isBone) rest.push([o, o.quaternion.clone(), o.position.clone()]); });
     const restHipsY = B.Hips.position.y;
-    // les animations : on renomme les pistes vers les os de CE perso, et on met la hauteur du bassin à son échelle
-    const mixer = new THREE.AnimationMixer(body), acts = {};
+    // les animations : on renomme les pistes vers les os de CE perso, et on met la hauteur du bassin à son échelle.
+    // On calcule la pose nous-mêmes à chaque image (sans « AnimationMixer », qui garde une mémoire d'une image à l'autre et
+    // n'applique un os que s'il a bougé : avec nos retouches, ça faisait des bras qui sautaient pendant les arrêts sur image).
+    const acts = {};
     for (const n in A) {
-      const clip = A[n].clip.clone(); const k = restHipsY / A[n].restY;
-      clip.tracks = clip.tracks.filter((tr) => !/\.scale$/.test(tr.name)).map((tr) => { const t2 = tr.clone(); t2.name = tr.name.replace(/^mixamorig\d*/, prefix);
-        if (/Hips\.position$/.test(t2.name)) { const v = t2.values = t2.values.slice(); for (let i = 0; i < v.length; i++) v[i] *= k; } return t2; });
-      const a = mixer.clipAction(clip); a.play(); a.setEffectiveWeight(0); if (ONE_SHOT.has(n)) { a.setLoop(THREE.LoopOnce); a.clampWhenFinished = true; }
-      acts[n] = a;
+      const clip = A[n].clip, k = restHipsY / A[n].restY, tracks = [];
+      for (const tr of clip.tracks) {
+        const m = tr.name.match(/^mixamorig\d*(.+)\.(quaternion|position)$/); if (!m || !B[m[1]]) continue;
+        let t2 = tr; if (m[2] === 'position' && m[1] === 'Hips') { t2 = tr.clone(); const v = t2.values = tr.values.slice(); for (let i = 0; i < v.length; i++) v[i] *= k; }
+        if (m[2] === 'position' && m[1] !== 'Hips') continue;                                  // (seul le bassin se déplace)
+        tracks.push({ bone: B[m[1]], kind: m[2], interp: t2.createInterpolant() });
+      }
+      acts[n] = { duration: clip.duration, tracks, getClip: () => clip };
     }
     const charQ = (o) => { const q = new THREE.Quaternion(), chain = []; while (o && o !== root) { chain.push(o); o = o.parent; } for (let i = chain.length - 1; i >= 0; i--) q.multiply(chain[i].quaternion); return q; };
+    const tq = new THREE.Quaternion(), tv = new THREE.Vector3();
     const P = {
-      root, inner, body, bones: B, mats, mixer, acts, name,
-      duration: (n) => acts[n].getClip().duration,
+      root, inner, body, bones: B, mats, acts, name,
+      duration: (n) => acts[n].duration,
       /** pose(nom, temps, retouches) ou pose([[nom, temps, poids], …], retouches) */
       pose(list, t, spec) {
         if (typeof list === 'string') list = [[list, t, 1]]; else spec = t;
         for (const [o, q, p] of rest) { o.quaternion.copy(q); o.position.copy(p); }
-        for (const n in acts) { acts[n].setEffectiveWeight(0); acts[n].enabled = false; }
+        // le mélange des animations, os par os (poids total < 1 : on garde une part de la pose de repos)
+        const acc = new Map();
         for (const [n, tt, w] of list) {
-          const a = acts[n]; if (!a) { console.warn('animation inconnue', n); continue; }
-          const d = a.getClip().duration; a.enabled = true; a.setEffectiveWeight(w);
-          a.time = ONE_SHOT.has(n) ? Math.min(Math.max(0, tt), d - 1e-3) : ((tt % d) + d) % d;
+          const a = acts[n]; if (!a) { console.warn('animation inconnue', n); continue; } if (w <= 1e-4) continue;
+          const d = a.duration, time = ONE_SHOT.has(n) ? Math.min(Math.max(0, tt), d - 1e-3) : ((tt % d) + d) % d;
+          for (const tr of a.tracks) {
+            const v = tr.interp.evaluate(time), key = tr.bone.uuid + tr.kind;
+            let e = acc.get(key); if (!e) { e = { bone: tr.bone, kind: tr.kind, w: 0, q: new THREE.Quaternion(), p: new THREE.Vector3() }; acc.set(key, e); }
+            if (tr.kind === 'quaternion') { tq.fromArray(v); if (e.w === 0) e.q.copy(tq); else e.q.slerp(tq, w / (e.w + w)); }
+            else { tv.fromArray(v); if (e.w === 0) e.p.copy(tv); else e.p.lerp(tv, w / (e.w + w)); }
+            e.w += w;
+          }
         }
-        mixer.update(0);
+        for (const e of acc.values()) {
+          const k = Math.min(1, e.w);
+          if (e.kind === 'quaternion') e.bone.quaternion.slerp(e.q, k); else e.bone.position.lerp(e.p, k);
+        }
         for (const n in (spec || {})) {
           const b = B[n]; if (!b) continue; const pq = charQ(b.parent), cur = pq.clone().multiply(b.quaternion);
           for (const [ax, ang] of spec[n]) cur.premultiply(qa.setFromAxisAngle(AX[ax], ang));

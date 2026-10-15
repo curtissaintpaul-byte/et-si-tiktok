@@ -22,7 +22,7 @@ import { buildStreet, makeSUV, keyFob, relayBox } from '../../lib-rue.js';
 
 const Q = new URLSearchParams(location.search);
 const HOLD_BOX = { off: [0.0, 0.1, 0.045], rot: [0, 0, 0] };   // le boîtier dans la paume (repère de l'os de la main)
-const TEXT0 = 2.0;                                            // à quel moment de l'animation « texting » on démarre (téléphone levé)
+const TEXT0 = 3.1;                                            // le moment de l'animation « texting » où le boîtier est tenu droit (on y reste)
 const DRIVER = new THREE.Vector3(-0.42, 0.25, -0.4);          // le bassin du conducteur (repère de la voiture)
 const V = new THREE.Vector3, v3 = (x, y, z) => new THREE.Vector3(x, y, z);
 // --- le découpage (temps de la scène, en secondes) : un plan = un cadre, une caméra, un « look »
@@ -99,7 +99,7 @@ export default async function () {
     // A : il marche jusqu'à la porte, puis regarde l'écran de son boîtier, collé à la porte ; il reste là tout le vol
     const a = along(PATH_A, ts), endA = PATH_A[3][0]; A.root.position.copy(a.p);
     if (a.walking) { A.pose('walk', ts * 1.1); A.root.rotation.y = Math.atan2(a.dir.x, a.dir.z); }
-    else if (ts > endA) { const k = sm(endA, endA + 0.5, ts); A.pose([['walk', endA * 1.1, 1 - k], ['texting', ts - endA + TEXT0, k]]); A.root.rotation.y = Math.PI; }
+    else if (ts > endA) { const k = sm(endA, endA + 0.5, ts); A.pose([['walk', endA * 1.1, 1 - k], ['texting', TEXT0 + 0.12 * Math.sin(ts * 1.3), k]]); A.root.rotation.y = Math.PI; }   // (on reste au moment où il tient le boîtier droit, avec de petits mouvements)
     else { A.pose('idle', ts); A.root.rotation.y = Math.PI / 2; }
     // B : il va à la portière du conducteur avec son boîtier ; puis il est au volant (plan habitacle), puis il est parti
     const inCar = ts >= SH.habitacle && ts < SH.air2 + 0.2;
@@ -107,7 +107,7 @@ export default async function () {
     if (inCar) { B.pose('driving', ts - SH.habitacle); B.root.position.copy(car.root.localToWorld(DRIVER.clone())); B.root.rotation.y = car.root.rotation.y + Math.PI / 2; return; }
     const b = along(PATH_B, ts), endB = PATH_B[3][0]; B.root.position.copy(b.p);
     if (b.walking) { B.pose('walk', ts * 1.1 + 0.4); B.root.rotation.y = Math.atan2(b.dir.x, b.dir.z); }
-    else if (ts > endB) { const k = sm(endB, endB + 0.5, ts); B.pose([['walk', endB * 1.1 + 0.4, 1 - k], ['texting', ts - endB + TEXT0 + 1.3, k]]); B.root.rotation.y = Math.PI / 2; }
+    else if (ts > endB) { const k = sm(endB, endB + 0.5, ts); B.pose([['walk', endB * 1.1 + 0.4, 1 - k], ['texting', TEXT0 + 0.05 + 0.12 * Math.sin(ts * 1.1 + 1), k]]); B.root.rotation.y = Math.PI / 2; }
     else { B.pose('idle', ts); B.root.rotation.y = Math.PI / 2; }
   }
 
