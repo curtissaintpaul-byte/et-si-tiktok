@@ -128,3 +128,15 @@ Testé sur `episodes/vol-voiture` (15/10/2026), inspiré des reconstitutions 3D 
 - **Rendu rapide** : une lampe éteinte (intensité 0) coûte quand même du calcul à chaque pixel. Dans `update()`, après avoir réglé les
   lumières : `for (const l of LIGHTS) l.visible = l.intensity > 0;` (le rendu du sommeil est passé de ~17 à plus de 60 images/minute).
 - Attention aux commentaires `//` ajoutés au milieu d'une ligne : tout ce qui suit est ignoré (ça a déjà « effacé » une voiture et un terminal).
+
+## Annexe : les plans à la première personne (idée de Curtis, 16/10/2026)
+Inspiration : le compte notsurvivable.pov (« POV: you fall into Jupiter », 780 000 j'aime en un jour). À utiliser seulement quand ça sert
+l'histoire (première vidéo prévue : « Et si tu passais un an dans l'espace ? »). **Toute la vidéo n'est pas obligée d'être en première
+personne** : on mélange des plans « dans tes yeux » avec les plans habituels (vue de dehors, silhouette du corps, arrêt sur image).
+- Le plan « dans tes yeux » : la caméra à hauteur des yeux, un léger balancement (la respiration), tes mains ou tes gants qui entrent
+  dans le bas de l'image. Pas besoin de Mixamo : deux bras simples (capsules + gants) accrochés à la caméra suffisent.
+- Ce que cette vidéo fait bien, à reprendre : un ÉNORME compteur en haut à gauche qui avance pendant toute la vidéo (là-bas l'altitude
+  puis la profondeur ; chez nous les jours, les heures, les degrés…), avec 2 ou 3 petites lignes dessous (pression, température) ;
+  une petite fiche au centre de l'écran, un seul fait et un seul chiffre à la fois ; des sous-titres très courts (une idée, 5 à 8 mots),
+  un nouveau fait toutes les 3 à 4 secondes ; le décor change de couleur à chaque étape ; une phrase finale qui claque ; et une mention
+  discrète « hypothèse, chiffres approximatifs ».
