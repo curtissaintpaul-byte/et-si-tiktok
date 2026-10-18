@@ -21,6 +21,7 @@ f_val, f_sub = fnt(F + '/eb-garamond-latin-500-normal.ttf', 72), fnt(F + '/eb-ga
 M = {
   'winner': dict(start=56.0, drop=64.81, beats=[65.21, 65.88, 66.58, 67.25, 67.95, 68.65, 69.32, 69.99, 70.69, 71.36, 72.06, 72.76, 73.45, 74.15, 74.85, 75.52, 76.22, 76.89, 77.59, 78.26, 78.96, 79.65, 80.33, 81.02, 81.72, 82.42, 83.11, 83.81, 84.48, 85.18, 85.85, 86.55, 87.24, 87.94, 88.61, 89.31, 90.01, 90.68, 91.38, 92.05, 92.75, 93.42, 94.05, 94.77, 95.49, 96.16, 96.79, 97.42, 98.02, 98.62, 99.32, 99.99, 100.69, 101.36, 102.04, 102.71, 103.43, 104.10, 104.82, 105.50, 106.19, 106.89, 107.54, 108.28, 108.96, 109.63, 110.26, 110.95, 111.67, 112.39, 113.02, 113.74, 114.46, 115.16, 115.85, 116.53, 117.24], step=3, end_card=4.0, intro_src=(5.2, 14.01), phrase=12.0),
   'earth': dict(start=150.0, drop=157.37, beats=[159.88, 160.76, 161.62, 162.50, 163.36, 164.22, 165.10, 165.98, 166.82, 167.68, 168.56, 169.44, 170.30, 171.18, 172.02, 172.90, 173.76, 174.64, 175.50, 176.36, 177.22, 178.10, 178.99, 179.85, 180.70, 181.56, 182.42, 183.28, 184.14, 185.00, 185.91, 186.76, 187.62, 188.51, 189.39, 190.25, 191.11, 191.97, 192.85, 193.73, 194.59, 195.45, 196.31, 197.19, 198.05, 198.91, 199.79, 200.65, 201.51, 202.39, 203.25, 204.13, 204.99, 205.88, 206.73, 207.59, 208.45, 209.33, 210.19, 211.08], step=3, end_card=4.2, intro_src=(5.64, 13.01), phrase=12.0),
+  'earth2': dict(start=192.0, drop=199.35, beats=[199.79, 200.65, 201.51, 202.39, 203.25, 204.13, 204.99, 205.87, 206.73, 207.59, 208.48, 209.33, 210.19, 211.08, 211.94, 212.79, 213.65, 214.54, 215.39, 216.28, 217.14, 218.00, 218.88, 219.74, 220.62, 221.48, 222.34, 223.20, 224.08, 224.94, 225.82, 226.68, 227.56, 228.42, 229.30, 230.16, 231.02, 231.88, 232.74, 233.62, 234.50, 235.36, 236.22, 237.08, 237.96, 238.82, 239.71, 240.57, 241.45, 242.31, 243.17, 244.03, 244.91, 245.77, 246.65, 247.51, 248.37, 249.23, 250.11, 250.97, 251.83, 252.71, 253.57, 254.43, 255.31, 256.19], step=3, end_card=4.2, intro_src=(6.0, 13.35), phrase=12.0),
 }[VER]
 
 # --- les plans : (fichier, début dans la source, cadrage, lieu · crédit). Cadrage : 'v' (vidéo verticale), ('h', x) (horizontale recadrée, x = centre 0..1), 'fit' (entière sur fond flou)
@@ -54,8 +55,33 @@ S = {
 ORDER = {'winner': ['toit_fumee', 'hdv', 'ambulance', 'vaincra', 'marianne_pm', 'statue', 'pompiers', 'fumi_orange', 'mariage', 'chevaliers', 'danse', 'mascotte', 'elus', 'boulevard',
                     'periph', 'charge', 'nation', 'gaz', 'lyon_ot', 'gaz_arbres', 'crs', 'camion', 'pompier_fumi', 'brut', 'foule_finale'],
          'earth': ['toit_fumee', 'hdv', 'ambulance', 'vaincra', 'marianne_pm', 'statue', 'pompiers', 'fumi_orange', 'periph', 'charge', 'mariage', 'ambulance2', 'nation', 'gaz',
-                   'lyon_ot', 'gaz_arbres', 'crs', 'pompier_fumi', 'brut', 'foule_finale']}[VER]
+                   'lyon_ot', 'gaz_arbres', 'crs', 'pompier_fumi', 'brut', 'foule_finale']}.get(VER, [])
 S['ambulance2'] = ('32-new.mp4', 15.0, 'v', '')
+S.update({
+  'e_foule_pm': ('05-parismatch-banderole-marianne-lyceens.mp4', 22.0, 'v', 'Paris, place de la République · Paris Match'),
+  'e_haie': ('32-new.mp4', 1.0, 'v', ''),
+  'e_marianne_fumee': ('33-new.mp4', 0.5, ('h', 0.45), 'Paris, place de la République'),
+  'e_socle': ('35-new.mp4', 15.9, 'v', 'Paris, place de la République'),
+  'e_canadair': ('21-optijournal-pompiers.mp4', 12.0, 'v', 'Paris · @optijournal'),
+  'e_camion_rue': ('31-new.mp4', 3.7, 'v', ''),
+  'e_canal': ('36-new.mp4', 30.0, 'v', ''),
+  'e_balcon': ('12-ville-inconnue-rue-foule.mp4', 4.0, 'v', ''),
+  'e_bras': ('32-new.mp4', 19.5, 'v', ''),
+  'e_fumee1': ('01-confrontfr-heurts-gaz.mp4', 20.0, ('h', 0.3), '@confrontfr'),
+  'e_crs_gaz': ('30-new.mp4', 37.0, ('h', 0.5), 'Paris · @LucAuffret'),
+  'e_fumee2': ('01-confrontfr-heurts-gaz.mp4', 150.0, ('h', 0.3), '@confrontfr'),
+  'e_seul': ('34-new.mp4', 3.6, ('h', 0.45), 'Paris · @LucAuffret'),
+  'e_nation': ('23-parismatch-nation-lyceens.mp4', 27.0, 'v', 'Paris, place de la Nation · Paris Match'),
+  'e_gaz_rue': ('07-confrontfr-gaz-lacrymo.mp4', 25.0, ('h', 0.36), '@confrontfr'),
+  'e_lyon': ('13-lyonmag-vitrines-lyon.mp4', 8.0, 'v', 'Lyon, office de tourisme · Lyon Mag'),
+  'e_sac': ('30-new.mp4', 46.0, ('h', 0.5), 'Paris · @LucAuffret'),
+  'e_statue_noire': ('35-new.mp4', 4.5, 'v', 'Paris, place de la République'),
+  'e_finale': ('04-hotel-de-ville-foule.mp4', 16.0, 'v', 'Paris, Hôtel de Ville'),
+})
+S['e_boulevard'] = ('09-paris-cortege-boulevard.mp4', 4.5, ('h', 0.5), 'Paris')
+if VER == 'earth2':   # 20 plans, le refrain « What about us » (227,5 s) tombe sur le 11e : la fumée
+    ORDER = ['e_foule_pm', 'e_haie', 'e_marianne_fumee', 'e_socle', 'e_canadair', 'e_camion_rue', 'e_canal', 'e_balcon', 'e_boulevard', 'e_bras',
+             'e_fumee1', 'e_crs_gaz', 'e_fumee2', 'e_seul', 'e_nation', 'e_gaz_rue', 'e_lyon', 'e_sac', 'e_statue_noire', 'e_finale']
 
 # --- le calendrier des plans (temps de la vidéo)
 t0 = M['start']; drop = M['drop'] - t0
