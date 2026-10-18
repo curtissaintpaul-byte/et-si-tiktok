@@ -148,6 +148,7 @@ export async function buildMerci(V) {
   const W = 720, H = 1280, tmp = new THREE.Vector3();
   const EC1 = [new THREE.Vector3(22, 13.5, 108), new THREE.Vector3(2, 2.2, 72)], EC2 = [new THREE.Vector3(17.5, 15.5, 112.5), new THREE.Vector3(2, 2.6, 72)];
   function camAt(ts) {
+    if (V.endMove && ts > V.back) { const k = sm(V.back, T.endCard, ts); return [CAMP.clone().lerp(V.endMove[0], k), LOOK.clone().lerp(V.endMove[1], k)]; }   // (le final : la caméra s'élève au-dessus de la foule)
     if (!EF || ts < EF.c0 || ts > EF.c3) return [CAMP, LOOK];
     const lp = (a, b, k) => a.clone().lerp(b, k);
     if (ts < EF.c1) { const k = sm(EF.c0, EF.c1, ts); return [lp(CAMP, EC1[0], k), lp(LOOK, EC1[1], k)]; }
@@ -165,7 +166,7 @@ export async function buildMerci(V) {
     const fill = era ? era.fill * (0.3 + 0.7 * sm(era.t0, era.t0 + 1.8, ts)) : (ts >= V.back ? V.now.fill * (0.4 + 0.6 * sm(V.back, V.back + 1.5, ts)) : V.now.fill);
     crowd.flat.material.uniforms.uAtlas.value = yellow ? ATL_Y : ATL;
     crowd.update(10 * fill, { light: 1, fogNear: 120, fogFar: 1400 });
-    for (const c of cops) { c.root.visible = Y >= 2006; c.update(ts); }
+    for (const c of cops) { c.root.visible = Y >= 2006 && !(V.noCopsAfterBack && ts > V.back); c.update(ts); }
     // toi et tes voisins (en 1936 ou en 1968, ils lèvent le poing ; en 2018, gilets jaunes)
     setOutfit(you, era ? (yellow ? 8 : (iE * 3 + 1) % 8) : 3);
     you.stand(0.02 * Math.sin(ts * 1.3));

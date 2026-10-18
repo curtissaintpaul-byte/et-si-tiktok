@@ -15,6 +15,7 @@
 //     (loi du 30 décembre 2025) jusqu'en 2028.
 // =====================================================================
 import { buildMerci } from '../../lib-merci.js';
+import { THREE } from '../../engine.js';
 import { RISK } from '../../lib-freeze.js';
 
 const OK = RISK.ok, KO = '#ff9f0a', GOLD = '#ffcf6b';
@@ -32,13 +33,18 @@ const SUBS = [
   [27.69, 30.08, '2018. Les gilets jaunes. La hausse du carburant est annulée.'],
   [30.35, 33.18, '2023. La réforme des retraites passe. Deux ans après, elle est mise en pause.'],
   [33.45, 35.88, '2025. Au Népal, la génération Z fait tomber le gouvernement.'],
+  // (version 100 % 3D, après le masquage de TikTok : la fin se passe aussi sur la place, en 2026)
+  [36.3, 39.3, 'Toutes n’ont pas gagné tout de suite. Mais aucune n’a été inutile.'],
+  [39.5, 42.6, 'Aujourd’hui, c’est vous qui êtes dans la rue. Et vous avez raison.'],
+  [42.8, 46.6, 'Chaque été, en congés, on dit merci à ceux de 1936.'],
+  [46.8, 51.6, 'Un jour, nos enfants vous diront merci à vous aussi.'],
 ];
 const W = (label, value, sub) => ({ label, value, sub, color: OK });
 
 export default () => buildMerci({
   T, SUBS, seed: 1936, sceneEnd: 60.0, noYou: true, stampColor: GOLD,
   hook: 'Quand le peuple<br><em>se lève</em>', trIn: 0.28, trOut: 0.14,
-  rewindAt: 2.7, back: 36.0,
+  rewindAt: 2.7, back: 36.0, noCopsAfterBack: true, endMove: [new THREE.Vector3(16, 16, 112), new THREE.Vector3(0, 3, 0)],
   now: { fill: 1.0, b1: { label: 'AUJOURD’HUI · 17 OCTOBRE 2026', value: 'VOUS', sub: 'DANS LA RUE' }, b2: { label: 'DEMAIN', value: 'MERCI', sub: 'DE LA PART DE NOS ENFANTS', color: OK } },
   eras: [
     { year: 1789, t0: 3.60, t1: 6.26, date: '14 JUILLET 1789', fill: 0, map: { lon: 2.35, lat: 48.86, country: 'France', zoom: 12, place: 'PARIS', sub: '14 JUILLET 1789 · LA PRISE DE LA BASTILLE', dots: 700, spread: 34 }, b1: { label: '14 JUILLET 1789 · PARIS', value: 'LA BASTILLE', sub: 'PRISE PAR LE PEUPLE' }, b2: W('OBTENU · AOÛT 1789', 'DROITS DE L’HOMME', 'ET LA FIN DES PRIVILÈGES'), stamp: { at: 4.55, text: 'FIN DES PRIVILÈGES', ok: true }, },
@@ -55,6 +61,6 @@ export default () => buildMerci({
     { year: 2025, t0: 33.30, t1: 36.00, date: '8 SEPTEMBRE 2025', fill: 0, map: { lon: 85.32, lat: 27.72, country: 'Nepal', zoom: 10, place: 'KATMANDOU', sub: '8 SEPTEMBRE 2025 · LA GÉNÉRATION Z', dots: 900, spread: 40 }, b1: { label: '8 SEPTEMBRE 2025 · NÉPAL', value: 'GÉNÉRATION Z', sub: 'DANS LA RUE' }, b2: W('OBTENU · LE LENDEMAIN', 'DÉMISSION', 'DU PREMIER MINISTRE'), stamp: { at: 34.25, text: 'DÉMISSION', ok: true }, },
   ],
   effect: null, freeze: null,
-  end: { kicker: 'SOURCES : LÉGIFRANCE · ASSEMBLÉE NATIONALE · NATIONAL ARCHIVES (USA) · BBC · DEUTSCHLAND.DE · IMAGES DU 17 OCTOBRE : PARIS MATCH, BRUT, ACTU.FR, @OPTIJOURNAL, @MARDIEVAL.MTP',
+  end: { kicker: 'SOURCES : LÉGIFRANCE · ASSEMBLÉE NATIONALE · NATIONAL ARCHIVES (USA) · BBC · DEUTSCHLAND.DE · PHOTOS D’ARCHIVES : WIKIMEDIA COMMONS',
     q: '<span style="font-size:2.6em">Merci.</span>', cta: 'PARTAGE-LA À QUELQU’UN QUI MARCHE AUJOURD’HUI' },
 });
