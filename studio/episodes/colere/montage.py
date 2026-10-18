@@ -21,6 +21,7 @@ f_val, f_sub = fnt(F + '/eb-garamond-latin-500-normal.ttf', 72), fnt(F + '/eb-ga
 M = {
   'winner': dict(start=56.0, drop=64.81, beats=[65.21, 65.88, 66.58, 67.25, 67.95, 68.65, 69.32, 69.99, 70.69, 71.36, 72.06, 72.76, 73.45, 74.15, 74.85, 75.52, 76.22, 76.89, 77.59, 78.26, 78.96, 79.65, 80.33, 81.02, 81.72, 82.42, 83.11, 83.81, 84.48, 85.18, 85.85, 86.55, 87.24, 87.94, 88.61, 89.31, 90.01, 90.68, 91.38, 92.05, 92.75, 93.42, 94.05, 94.77, 95.49, 96.16, 96.79, 97.42, 98.02, 98.62, 99.32, 99.99, 100.69, 101.36, 102.04, 102.71, 103.43, 104.10, 104.82, 105.50, 106.19, 106.89, 107.54, 108.28, 108.96, 109.63, 110.26, 110.95, 111.67, 112.39, 113.02, 113.74, 114.46, 115.16, 115.85, 116.53, 117.24], step=3, end_card=4.0, intro_src=(5.2, 14.01), phrase=12.0),
   'earth': dict(start=150.0, drop=157.37, beats=[159.88, 160.76, 161.62, 162.50, 163.36, 164.22, 165.10, 165.98, 166.82, 167.68, 168.56, 169.44, 170.30, 171.18, 172.02, 172.90, 173.76, 174.64, 175.50, 176.36, 177.22, 178.10, 178.99, 179.85, 180.70, 181.56, 182.42, 183.28, 184.14, 185.00, 185.91, 186.76, 187.62, 188.51, 189.39, 190.25, 191.11, 191.97, 192.85, 193.73, 194.59, 195.45, 196.31, 197.19, 198.05, 198.91, 199.79, 200.65, 201.51, 202.39, 203.25, 204.13, 204.99, 205.88, 206.73, 207.59, 208.45, 209.33, 210.19, 211.08], step=3, end_card=4.2, intro_src=(5.64, 13.01), phrase=12.0),
+  'winner_soft': dict(start=56.0, drop=64.81, beats=[65.21, 65.88, 66.58, 67.25, 67.95, 68.65, 69.32, 69.99, 70.69, 71.36, 72.06, 72.76, 73.45, 74.15, 74.85, 75.52, 76.22, 76.89, 77.59, 78.26, 78.96, 79.65, 80.33, 81.02, 81.72, 82.42, 83.11, 83.81, 84.48, 85.18, 85.85, 86.55, 87.24, 87.94, 88.61, 89.31, 90.01, 90.68, 91.38, 92.05, 92.75, 93.42, 94.05, 94.77, 95.49, 96.16, 96.79, 97.42, 98.02, 98.62, 99.32, 99.99, 100.69, 101.36, 102.04, 102.71, 103.43, 104.10, 104.82, 105.50, 106.19, 106.89, 107.54, 108.28, 108.96, 109.63, 110.26, 110.95, 111.67, 112.39, 113.02, 113.74, 114.46, 115.16, 115.85, 116.53, 117.24], step=4, end_card=4.0, intro_src=(5.2, 14.01), phrase=12.0),
   'earth2': dict(start=192.0, drop=199.35, beats=[199.79, 200.65, 201.51, 202.39, 203.25, 204.13, 204.99, 205.87, 206.73, 207.59, 208.48, 209.33, 210.19, 211.08, 211.94, 212.79, 213.65, 214.54, 215.39, 216.28, 217.14, 218.00, 218.88, 219.74, 220.62, 221.48, 222.34, 223.20, 224.08, 224.94, 225.82, 226.68, 227.56, 228.42, 229.30, 230.16, 231.02, 231.88, 232.74, 233.62, 234.50, 235.36, 236.22, 237.08, 237.96, 238.82, 239.71, 240.57, 241.45, 242.31, 243.17, 244.03, 244.91, 245.77, 246.65, 247.51, 248.37, 249.23, 250.11, 250.97, 251.83, 252.71, 253.57, 254.43, 255.31, 256.19], step=3, end_card=4.2, intro_src=(6.0, 13.35), phrase=12.0),
 }[VER]
 
@@ -79,6 +80,23 @@ S.update({
   'e_finale': ('04-hotel-de-ville-foule.mp4', 16.0, 'v', 'Paris, Hôtel de Ville'),
 })
 S['e_boulevard'] = ('09-paris-cortege-boulevard.mp4', 4.5, ('h', 0.5), 'Paris')
+S.update({   # la version « douce » (TikTok a masqué la 1re) : ni gaz, ni heurts, ni feu, ni fumigènes, et peu de vidéos au logo TikTok
+  's_foule': ('35-new.mp4', 19.4, 'v', 'Paris, place de la République'),
+  's_haie': ('21-optijournal-pompiers.mp4', 4.0, 'v', 'Paris · @optijournal'), 's_ambulance': ('32-new.mp4', 12.5, 'v', ''), 's_bras': ('32-new.mp4', 19.5, 'v', ''),
+  's_boulevard': ('09-paris-cortege-boulevard.mp4', 1.5, ('h', 0.5), 'Paris'),
+  's_statue': ('04-hotel-de-ville-foule.mp4', 6.0, 'v', 'Paris, Hôtel de Ville · @etienne.jarrier'), 's_socle': ('35-new.mp4', 15.9, 'v', 'Paris, place de la République'),
+  's_canal': ('36-new.mp4', 30.0, 'v', ''), 's_camion': ('36-new.mp4', 8.8, 'v', ''),
+  's_canadair': ('21-optijournal-pompiers.mp4', 12.0, 'v', 'Paris · @optijournal'),
+  's_mariage': ('08-lyon-mariage-mairie-7e.mp4', 3.0, 'v', 'Lyon · @medaveprod'),
+  's_danse': ('06-paris-danse-gilet-jaune-metro.mp4', 10.0, 'v', 'Paris'), 's_mascotte': ('14-lille-mascotte-motards.mp4', 3.0, 'v', 'Lille'),
+  's_chevaliers': ('22-mardieval-chevaliers-tram.mp4', 15.5, 'v', '@mardieval.mtp'), 's_elus': ('37-new.mp4', 6.5, 'v', ''),
+  's_periph': ('03-periph-bloque-fourgons.mp4', 7.0, 'v', 'Paris, périphérique'),
+  's_brut': ('25-brut-banderole-lycees-delaisses.mp4', 2.0, 'v', 'Paris, place de la République · Brut'),
+  's_hdv': ('04-hotel-de-ville-foule.mp4', 16.0, 'v', 'Paris, Hôtel de Ville · @etienne.jarrier'),
+})
+if VER == 'winner_soft':
+    ORDER = ['s_foule', 's_haie', 's_ambulance', 's_boulevard', 's_statue', 's_canal', 's_canadair', 's_camion', 's_mariage', 's_danse', 's_mascotte', 's_chevaliers',
+             's_elus', 's_periph', 's_socle', 's_brut', 's_bras', 's_hdv']
 if VER == 'earth2':   # 20 plans, le refrain « What about us » (227,5 s) tombe sur le 11e : la fumée
     ORDER = ['e_foule_pm', 'e_haie', 'e_marianne_fumee', 'e_socle', 'e_canadair', 'e_camion_rue', 'e_canal', 'e_balcon', 'e_boulevard', 'e_bras',
              'e_fumee1', 'e_crs_gaz', 'e_fumee2', 'e_seul', 'e_nation', 'e_gaz_rue', 'e_lyon', 'e_sac', 'e_statue_noire', 'e_finale']
