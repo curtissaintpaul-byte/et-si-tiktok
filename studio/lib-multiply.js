@@ -92,14 +92,14 @@ export function makeCrowd(scene, PEOPLE, { count, t0, t1, spacing = 0.62, exclud
   const aPos = new Float32Array(NF * 3), aInfo = new Float32Array(NF * 4);
   for (let j = 0; j < NF; j++) { const [x, z] = spots[real.length + j]; aPos.set([x, 0, z], j * 3); aInfo.set([Math.floor(R() * 8), ta(real.length + j), 0.92 + R() * 0.14, 0.75 + R() * 0.35], j * 4); }
   qg.setAttribute('aPos', new THREE.InstancedBufferAttribute(aPos, 3)); qg.setAttribute('aInfo', new THREE.InstancedBufferAttribute(aInfo, 4));
-  const U = { uAtlas: { value: atlas || PEOPLE.atlas() }, uTime: { value: 0 }, uFog: { value: fog.color }, uFogA: { value: fog.near }, uFogB: { value: fog.far }, uLight: { value: 1 } };
+  const U = { uAtlas: { value: atlas || PEOPLE.atlas() }, uTime: { value: 0 }, uFog: { value: fog.color }, uFogA: { value: fog.near }, uFogB: { value: fog.far }, uLight: { value: 1 }, uLift: { value: 0 } };
   const mat = new THREE.ShaderMaterial({
     uniforms: U,
-    vertexShader: `attribute vec3 aPos; attribute vec4 aInfo; uniform float uTime; varying vec2 vUv; varying float vShade; varying float vDist;
+    vertexShader: `attribute vec3 aPos; attribute vec4 aInfo; uniform float uTime; uniform float uLift; varying vec2 vUv; varying float vShade; varying float vDist;
       void main(){
         float k = clamp((uTime - aInfo.y) / 0.3, 0.0, 1.0); float c = 1.7; float m = k - 1.0; float s = k <= 0.0 ? 0.0 : 1.0 + (c + 1.0) * m * m * m + c * m * m;   // (pas de pow() : base négative interdite en GLSL)
         vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
-        vec3 wp = aPos + right * position.x * aInfo.z * s + vec3(0.0, 1.0, 0.0) * position.y * aInfo.z * s;
+        vec3 wp = aPos + right * position.x * aInfo.z * s + vec3(0.0, 1.0, 0.0) * (position.y * aInfo.z * s + uLift);
         float cell = aInfo.x; vUv = vec2((mod(cell, 4.0) + uv.x) / 4.0, (floor(cell / 4.0) + uv.y) / 2.0);
         vShade = aInfo.w; vec4 mv = viewMatrix * vec4(wp, 1.0); vDist = -mv.z; gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `uniform sampler2D uAtlas; uniform vec3 uFog; uniform float uFogA; uniform float uFogB; uniform float uLight; varying vec2 vUv; varying float vShade; varying float vDist;
@@ -107,8 +107,8 @@ export function makeCrowd(scene, PEOPLE, { count, t0, t1, spacing = 0.62, exclud
         vec3 col = c.rgb / max(c.a, 0.001) * vShade * uLight; col = mix(col, uFog, smoothstep(uFogA, uFogB, vDist)); gl_FragColor = vec4(col, 1.0); }`,
   });
   const flat = new THREE.Mesh(qg, mat); flat.frustumCulled = false; scene.add(flat);
-  function update(t, { light = 1, fogNear, fogFar } = {}) {
-    U.uTime.value = t; U.uLight.value = light; if (fogNear !== undefined) { U.uFogA.value = fogNear; U.uFogB.value = fogFar; }
+  function update(t, { light = 1, fogNear, fogFar, lift = 0 } = {}) {   // lift : tout le monde décolle du sol (un saut), en mètres
+    U.uTime.value = t; U.uLight.value = light; U.uLift.value = lift; if (fogNear !== undefined) { U.uFogA.value = fogNear; U.uFogB.value = fogFar; }
     for (const p of real) p.pop((t - p.ta) / 0.3);
     return countAt(t);
   }
