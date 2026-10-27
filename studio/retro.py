@@ -6,7 +6,7 @@ Elle ajoute les 3 moments « Faire réagir le public » choisis par Curtis :
 Comme coller des autocollants sur une photo déjà imprimée : la vidéo d'origine ne change pas, on ajoute par-dessus.
 
 Usage : python3 retro.py entree.mp4 sortie.mp4 reglages.json
-reglages.json : {"hook_at": 45.6, "hook_dur": 1.5, "title": "Et si la Terre *s'arrêtait* de tourner ?",
+reglages.json : {"hook_at": 45.6, "hook_dur": 1.5, "title": "Et si la Terre *s'arrêtait* de tourner ?", "accent": "#ffcf6b", "title_y": 520,
                  "mid_at": 24.0, "q": "Toi, tu fais quoi ?", "a1": "…", "a2": "…", "end_at": 49.8}
 (le mot entre étoiles est écrit en doré, comme dans le titre des vidéos)"""
 import json, os, subprocess, sys, tempfile
@@ -53,18 +53,18 @@ def shadowed(layer_fn, blur=10, alpha=150):
     return Image.alpha_composite(sh, txt)
 
 
-def title_png(text, path):
+def title_png(text, path, accent=ACCENT, yc=520):
     f = font('ExtraBold', 76); d0 = ImageDraw.Draw(Image.new('RGBA', (1, 1)))
-    lines = wrap(words(text), f, 900, d0); lh = 85; y0 = 520 - len(lines) * lh // 2
+    lines = wrap(words(text), f, 900, d0); lh = 85; y0 = yc - len(lines) * lh // 2
     def draw(d, shadow):
         for i, ln in enumerate(lines):
             full = ' '.join(w for w, _ in ln); x = 500 - d.textlength(full, font=f) / 2; y = y0 + i * lh
             for w, hot in ln:
-                d.text((x, y), w, font=f, fill=(0, 0, 0, 255) if shadow else ((*ACCENT, 255) if hot else (255, 255, 255, 255)))
+                d.text((x, y), w, font=f, fill=(0, 0, 0, 255) if shadow else ((*accent, 255) if hot else (255, 255, 255, 255)))
                 x += d.textlength(w + ' ', font=f)
     im = Image.new('RGBA', (W, H))
     g = Image.new('L', (1, H))  # voile sombre en haut pour la lisibilité
-    for y in range(H): g.putpixel((0, y), int(140 * max(0, 1 - abs(y - 520) / 420)))
+    for y in range(H): g.putpixel((0, y), int(140 * max(0, 1 - abs(y - yc) / 420)))
     im.paste((0, 0, 0, 255), (0, 0, W, H), g.resize((W, H)))
     Image.alpha_composite(im, shadowed(draw, 12, 200)).save(path)
 
@@ -103,17 +103,19 @@ def main():
     src, out, cfg = sys.argv[1], sys.argv[2], json.load(open(sys.argv[3]))
     A, HD = cfg['hook_at'], cfg.get('hook_dur', 1.5)
     tmp = tempfile.mkdtemp(prefix='retro-')
-    title_png(cfg['title'], f'{tmp}/t.png'); mid_png(cfg.get('q', 'Toi, tu fais quoi ?'), cfg['a1'], cfg['a2'], f'{tmp}/m.png'); end_png(f'{tmp}/e.png')
+    hexa = cfg.get('accent', '#ffcf6b').lstrip('#'); acc = tuple(int(hexa[i:i + 2], 16) for i in (0, 2, 4))
+    title_png(cfg['title'], f'{tmp}/t.png', acc, cfg.get('title_y', 520)); mid_png(cfg.get('q', 'Toi, tu fais quoi ?'), cfg['a1'], cfg['a2'], f'{tmp}/m.png'); end_png(f'{tmp}/e.png')
     M0, M1, E0 = HD + cfg['mid_at'], HD + cfg['mid_at'] + 3.5, HD + cfg['end_at'] + 0.6
+    # deux lectures du même fichier (l'accroche, puis la vidéo entière) : rien à garder en mémoire entre les deux
     fc = ';'.join([
-        '[0:v]split[v1][v2]', '[0:a]asplit[a1][a2]',
-        f'[v1]trim=start={A}:duration={HD},setpts=PTS-STARTPTS[hv]', '[hv][1:v]overlay=0:0[hvt]',
-        f'[a1]atrim=start={A}:duration={HD},asetpts=PTS-STARTPTS,afade=t=in:d=0.05,afade=t=out:st={HD - 0.12:.2f}:d=0.12[ha]',
-        '[v2]setpts=PTS-STARTPTS[mv]', '[a2]asetpts=PTS-STARTPTS[ma]',
+        '[0:v]setpts=PTS-STARTPTS[hv]', '[hv][2:v]overlay=0:0[hvt]',
+        f'[0:a]asetpts=PTS-STARTPTS,afade=t=in:d=0.05,afade=t=out:st={HD - 0.12:.2f}:d=0.12[ha]',
+        '[1:v]setpts=PTS-STARTPTS[mv]', '[1:a]asetpts=PTS-STARTPTS[ma]',
         '[hvt][ha][mv][ma]concat=n=2:v=1:a=1[cv][ca]',
-        f"[cv][2:v]overlay=0:0:enable='between(t,{M0:.2f},{M1:.2f})'[c2]",
-        f"[c2][3:v]overlay=0:0:enable='gte(t,{E0:.2f})'[ov]"])
-    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', src, '-i', f'{tmp}/t.png', '-i', f'{tmp}/m.png', '-i', f'{tmp}/e.png',
+        f"[cv][3:v]overlay=0:0:enable='between(t,{M0:.2f},{M1:.2f})'[c2]",
+        f"[c2][4:v]overlay=0:0:enable='gte(t,{E0:.2f})'[ov]"])
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-ss', str(A), '-t', str(HD), '-i', src, '-i', src,
+                    '-i', f'{tmp}/t.png', '-i', f'{tmp}/m.png', '-i', f'{tmp}/e.png',
                     '-filter_complex', fc, '-map', '[ov]', '-map', '[ca]', '-r', '30',
                     '-c:v', 'libx264', '-preset', 'slow', '-crf', '22', '-maxrate', '3300k', '-bufsize', '6600k', '-pix_fmt', 'yuv420p',
                     '-profile:v', 'high', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', out], check=True)
