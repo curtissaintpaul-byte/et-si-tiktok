@@ -124,6 +124,11 @@ Testé sur `episodes/vol-voiture` (15/10/2026), inspiré des reconstitutions 3D 
   3 voies, bande sonore, glissière, lampadaires dont seuls les 3 plus proches éclairent). `lib-tabac.js` (EuroMillions) : `buildTabac()`,
   `makeTicket()` (grille générique qui se coche), `makeTV()` (le tirage). `lib-gare.js` (Internet) : `buildHall()` (hall de gare, tableau des
   départs, café et terminal de paiement, distributeur), `makePhoneScreen()` (« aucune connexion » ou carte vide), `makeKit()` (kit d'urgence).
+  `lib-bordeaux.js` (téléphone, 2 parties, 29/10/2026) : `buildChambre()` (chambre d'étudiante, table de nuit avec tiroir qui s'ouvre,
+  réveil, porte et lumière du couloir, vue sur les toits et la flèche Saint-Michel), `buildQuais()` (quais de la Garonne devant la
+  place de la Bourse, miroir d'eau, banc face au fleuve : `QU.seat(dx)`), `buildBiblio()` (salle de lecture), `makePhone()`, `makeBook()`.
+  Caméra fixe mais **zoom numérique** possible (comme une vraie caméra de surveillance) : `zoomView()` de `lib-freeze.js` hors arrêt
+  sur image, avec la mention « ZOOM ×2 » sous l'étiquette en haut à droite (exemple : le tiroir et la nuit du jour 3 dans `telephone-1`).
 - Masques d'animation (`lib-mixamo.js`) : `P.pose([['sit', t, 1, LOWER], ['texting', t, 1, UPPER]])` = assis (le bas) + téléphone (le haut).
 - **Rendu rapide** : une lampe éteinte (intensité 0) coûte quand même du calcul à chaque pixel. Dans `update()`, après avoir réglé les
   lumières : `for (const l of LIGHTS) l.visible = l.intensity > 0;` (le rendu du sommeil est passé de ~17 à plus de 60 images/minute).
