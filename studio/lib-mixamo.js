@@ -40,7 +40,10 @@ export async function loadMixamo({ chars = [], anims = [], dir = 'models/mixamo'
   }));
   const qa = new THREE.Quaternion();
 
-  function make(name, { height = 1.8, shadows = true, texPx = 128 } = {}) {
+  // clean : rendu « propre » (épisodes hors reconstitution) : textures d'origine lissées, et cheveux visibles (dans les
+  //         fichiers convertis, la couleur des cheveux a une opacité de 0 : sans ça, les persos paraissent rasés)
+  function make(name, { height = 1.8, shadows = true, texPx = 128, clean = false } = {}) {
+    if (clean) texPx = 0;
     const root = new THREE.Group(), inner = new THREE.Group(); root.add(inner);
     const body = SkeletonUtils.clone(C[name].scene); inner.add(body);
     // la taille : on mesure en pose T, puis on pose les pieds au sol
@@ -52,10 +55,12 @@ export async function loadMixamo({ chars = [], anims = [], dir = 'models/mixamo'
       if (!o.isMesh) return; o.frustumCulled = false; o.castShadow = shadows; o.receiveShadow = true;
       o.material = [].concat(o.material).map((m0) => { const m = m0.clone(); const cut = /hair|lash/i.test(m.name);
         m.transparent = false; m.depthWrite = true; m.alphaTest = cut ? 0.45 : 0; m.side = cut ? THREE.DoubleSide : THREE.FrontSide;
-        m.roughness = Math.max(0.6, m.roughness ?? 0.8); m.metalness = 0; m.envMapIntensity = 0.4; mats.push(m); return m; });
+        m.roughness = Math.max(0.6, m.roughness ?? 0.8); m.metalness = 0; m.envMapIntensity = 0.4;
+        if (clean && cut) { m.opacity = 1; m.alphaTest = 0.35; }
+        mats.push(m); return m; });
       if (o.material.length === 1) o.material = o.material[0];
     });
-    ps2Textures(body, texPx);
+    if (texPx > 0) ps2Textures(body, texPx);   // texPx = 0 : textures d'origine, lissées (rendu « propre », sans gros carrés)
     // les os, leur nom court (« Hips », « RightHand »…) et la pose de repos
     const B = {}; let prefix = 'mixamorig';
     body.traverse((o) => { if (o.isBone) { const m = o.name.match(/^(mixamorig\d*)(.+)$/); if (m) { prefix = m[1]; B[m[2]] = o; } } });

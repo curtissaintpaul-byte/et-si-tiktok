@@ -212,3 +212,147 @@ export async function loadHooded(url = 'models/Soldier.glb') {
   }
   return { make };
 }
+
+// =====================================================================
+//  TENUES ET ACCESSOIRES (ajoutés le 30/10/2026 pour « Et si toutes les infirmières de France s'arrêtaient une semaine ? »)
+//  Marchent avec les persos Mixamo (lib-mixamo.js, P.bones) comme avec Michelle (P.bones aussi).
+//
+//  Repeindre un vêtement : on reprend la texture d'origine (les plis, les coutures, les ombres restent) et on change sa
+//  couleur, comme une teinture : tint(P, /Shirt/, [0.30, 0.52, 0.78]) → un haut de tenue de soins bleu ;
+//  tint(P, /Suit/, [0.93, 0.94, 0.95]) → la veste de costume devient une blouse blanche de médecin ;
+//  tint(P, /Hair/, [0.86, 0.86, 0.84], { gray: true }) → des cheveux gris-blanc (personne âgée).
+//  hide(P, /Mask/) : cache une pièce (le masque de chirurgien de Chad…).
+//  attachTo(P, 'Neck', objet, [x, y, z]) : accroche un objet à un os, décalé dans le repère du perso (x vers sa gauche,
+//  y vers le haut, z devant lui), à faire juste après make(), perso dans sa pose de repos. L'objet suit ensuite l'os.
+//  Accessoires : makeStethoscope(), makeBadge(couleur), makeGlasses(), makeClipboard(), makeBag(couleur).
+//  Les réglages qui vont bien pour chaque perso sont dans dressNurse(), dressDoctor(), dressElder() plus bas.
+// =====================================================================
+const _tintCache = new Map();
+function meshesOf(P, re) { const out = []; P.body.traverse((o) => { if (o.isMesh && re.test(o.name)) out.push(o); }); return out; }
+export function hide(P, re) { for (const m of meshesOf(P, re)) m.visible = false; }
+export function tint(P, re, rgb, { gray = false, keep = 0, flat = 0 } = {}) {   // flat (0 à 1) : efface les motifs (rayures…) en gardant un peu les plis
+  for (const o of meshesOf(P, re)) {
+    const m = o.material; const src = m.map; if (!src || !src.image) continue;
+    const key = src.image.uuid || (src.image.__k = src.image.__k || Math.random().toString(36)); const ck = key + o.name + rgb.join(',') + gray + keep + flat;
+    if (!_tintCache.has(ck)) {
+      const img = src.image, w = img.width, h = img.height, c = document.createElement('canvas'); c.width = w; c.height = h;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, w, h), a = d.data;
+      // la luminosité « de référence » du vêtement : la médiane, lue aux coins des triangles de CE morceau (ses coordonnées de texture)
+      const uv = o.geometry.attributes.uv, lums = [];
+      for (let i = 0; i < uv.count; i += Math.max(1, Math.floor(uv.count / 1500))) {
+        const x = Math.min(w - 1, Math.max(0, Math.floor((((uv.getX(i) % 1) + 1) % 1) * w))), y = Math.min(h - 1, Math.max(0, Math.floor((((uv.getY(i) % 1) + 1) % 1) * h)));
+        const k = (y * w + x) * 4; lums.push(0.3 * a[k] + 0.59 * a[k + 1] + 0.11 * a[k + 2]);
+      }
+      lums.sort((p, q) => p - q); const ref = Math.max(12, lums[Math.floor(lums.length / 2)] || 128);
+      for (let i = 0; i < a.length; i += 4) {
+        const l = 0.3 * a[i] + 0.59 * a[i + 1] + 0.11 * a[i + 2];
+        let f = gray ? Math.min(1.25, 0.55 + 0.45 * l / ref) : Math.min(1.35, Math.max(0.35, l / ref));   // les plis plus sombres, les reflets plus clairs
+        if (flat) f = Math.min(1.06, 1 + (f - 1) * (1 - flat));
+        for (let ch = 0; ch < 3; ch++) a[i + ch] = Math.min(255, (rgb[ch] * 255 * f) * (1 - keep) + a[i + ch] * keep);
+      }
+      g.putImageData(d, 0, 0);
+      const t = new THREE.CanvasTexture(c); t.flipY = src.flipY; t.colorSpace = THREE.SRGBColorSpace; t.wrapS = src.wrapS; t.wrapT = src.wrapT; t.anisotropy = 4;
+      _tintCache.set(ck, t);
+    }
+    o.material = m.clone(); o.material.map = _tintCache.get(ck); o.material.needsUpdate = true;
+  }
+}
+export function attachTo(P, boneName, obj, [x, y, z] = [0, 0, 0]) {
+  const b = P.bones[boneName];
+  if (P.pose) P.pose([]); else if (P.stand) P.apply({});   // pose de repos (tête droite, regard vers +Z) pour accrocher l'objet bien droit
+  P.root.updateMatrixWorld(true);
+  const rq = P.root.getWorldQuaternion(new THREE.Quaternion());
+  obj.position.copy(b.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(x, y, z).applyQuaternion(rq)));
+  obj.quaternion.copy(rq); obj.updateMatrixWorld(true);
+  b.attach(obj); return obj;
+}
+const _m = (o) => new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0, ...o });
+/** le stéthoscope autour du cou (repère : centre de la base du cou ; z devant, x vers la gauche du perso) */
+export function makeStethoscope({ w = 1, drop = 0.22, front = 0.15, color = '#1b1d22' } = {}) {   // drop : jusqu'où il descend sous le cou ; front : son avancée en bas (poitrine)
+  const G = new THREE.Group(), tube = _m({ color, roughness: 0.4 }), steel = _m({ color: '#c9ced6', metalness: 0.85, roughness: 0.25 });
+  const V = (a, b, c) => new THREE.Vector3(a * w, b, c);
+  // le tube passe derrière le cou et retombe des deux côtés sur la poitrine
+  const yL = -drop * 0.86, yR = -drop;   // (les deux côtés ne tombent pas tout à fait à la même hauteur)
+  const curve = new THREE.CatmullRomCurve3([V(0.06, yL, front - 0.005), V(0.08, -drop * 0.4, front * 0.82), V(0.078, 0.03, 0.035), V(0.0, 0.055, -0.055), V(-0.078, 0.03, 0.035), V(-0.08, -drop * 0.42, front * 0.82), V(-0.058, yR, front)]);
+  G.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 48, 0.0065, 6, false), tube));
+  // côté droit : le pavillon (la partie ronde qu'on pose sur la poitrine)
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.012, 20), steel); head.position.copy(V(-0.058, yR - 0.016, front + 0.006)); head.rotation.x = Math.PI / 2; G.add(head);
+  const dia = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.019, 0.004, 20), _m({ color: '#2a2c30' })); dia.position.copy(V(-0.058, yR - 0.016, front + 0.013)); dia.rotation.x = Math.PI / 2; G.add(dia);
+  // côté gauche : les deux embouts d'oreilles
+  for (const dx of [-0.012, 0.012]) {
+    const c2 = new THREE.CatmullRomCurve3([V(0.06, yL, front - 0.005), V(0.06 + dx, yL - 0.04, front + 0.005), V(0.06 + dx * 1.6, yL - 0.07, front + 0.008)]);
+    G.add(new THREE.Mesh(new THREE.TubeGeometry(c2, 8, 0.0035, 5, false), steel));
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.0065, 8, 6), _m({ color: '#111' })); tip.position.copy(V(0.06 + dx * 1.6, yL - 0.072, front + 0.008)); G.add(tip);
+  }
+  G.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  return G;
+}
+/** le badge (carte blanche, bande de couleur, photo) — à accrocher sur la poitrine, côté gauche */
+export function makeBadge(color = '#2e7cc4') {
+  const c = document.createElement('canvas'); c.width = 96; c.height = 144; const g = c.getContext('2d');
+  g.fillStyle = '#f7f7f5'; g.fillRect(0, 0, 96, 144); g.fillStyle = color; g.fillRect(0, 0, 96, 30);
+  g.fillStyle = '#c9d3dc'; g.fillRect(28, 42, 40, 46); g.fillStyle = '#8a97a4'; g.beginPath(); g.arc(48, 58, 10, 0, 7); g.fill(); g.fillRect(34, 72, 28, 16);
+  g.fillStyle = '#333'; g.fillRect(16, 100, 64, 7); g.fillStyle = '#888'; g.fillRect(24, 114, 48, 5);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const G = new THREE.Group();
+  const card = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.078, 0.003), [_m({ color: '#eee' }), _m({ color: '#eee' }), _m({ color: '#eee' }), _m({ color: '#eee' }), _m({ map: t, roughness: 0.35 }), _m({ color: '#eee' })]);
+  G.add(card);
+  const clip = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.018, 0.004), _m({ color: '#b8bec6', metalness: 0.7, roughness: 0.3 })); clip.position.set(0, 0.045, 0.002); G.add(clip);
+  return G;
+}
+/** des lunettes (repère : entre les deux yeux) */
+export function makeGlasses({ color = '#3a2e28' } = {}) {
+  const G = new THREE.Group(), fr = _m({ color, roughness: 0.35, metalness: 0.3 }), lens = new THREE.MeshStandardMaterial({ color: '#dfe8ee', transparent: true, opacity: 0.18, roughness: 0.05, metalness: 0.2 });
+  for (const x of [-0.032, 0.032]) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.021, 0.0025, 6, 24), fr); ring.position.set(x, 0, 0); ring.scale.set(1, 0.8, 1); G.add(ring);
+    const l = new THREE.Mesh(new THREE.CircleGeometry(0.02, 20), lens); l.position.set(x, 0, 0); l.scale.set(1, 0.8, 1); G.add(l);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.003, 0.1), fr); arm.position.set(x * 2.05, 0.004, -0.05); G.add(arm);
+  }
+  const br = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.003, 0.003), fr); br.position.set(0, 0.006, 0); G.add(br);
+  return G;
+}
+/** une planchette à pince avec une feuille (les transmissions) */
+export function makeClipboard() {
+  const G = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.31, 0.006), _m({ color: '#7a5636', roughness: 0.7 })); G.add(b);
+  const c = document.createElement('canvas'); c.width = 64; c.height = 88; const g = c.getContext('2d'); g.fillStyle = '#fbfbf8'; g.fillRect(0, 0, 64, 88);
+  for (let y = 16; y < 84; y += 6) { g.fillStyle = 'rgba(40,60,120,.55)'; g.fillRect(6, y, 20 + ((y * 37) % 32), 1.5); }
+  g.fillStyle = 'rgba(40,60,120,.8)'; g.fillRect(6, 8, 34, 2);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.27), _m({ map: t, roughness: 0.8 })); p.position.set(0, -0.012, 0.0035); G.add(p);
+  const clip = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.025, 0.012), _m({ color: '#c8ccd2', metalness: 0.8, roughness: 0.3 })); clip.position.set(0, 0.14, 0.006); G.add(clip);
+  return G;
+}
+/** un sac (cabas) porté à l'épaule ou à la main */
+export function makeBag(color = '#3d3a44') {
+  const G = new THREE.Group(), m = _m({ color, roughness: 0.8 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.26, 0.11), m); G.add(body);
+  const strap = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.008, 5, 16, Math.PI), m); strap.position.y = 0.13; G.add(strap);
+  return G;
+}
+/** une infirmière ou un infirmier : tenue de soins (haut et pantalon de la même couleur), stéthoscope, badge.
+ *  Réglages par perso (Mixamo) : Jody, Kate (femmes), Chad (homme, on retire le masque ; le calot reste). */
+export function dressNurse(P, { color = [0.30, 0.52, 0.78], pants, steth = true, badge = '#2e7cc4' } = {}) {
+  const n = P.name || '';
+  if (n === 'Chad') { hide(P, /Mask/); if (color) { tint(P, /Shirt/, color); tint(P, /Pants/, pants || color); } }
+  else { tint(P, /Shirt|Zipper/, color, { flat: n === 'Jody' ? 0.85 : 0 }); tint(P, /Pants/, pants || color); tint(P, /Shoes|Sneakers/, [0.92, 0.92, 0.9]); }
+  // (mesurés sur les maillages : la poitrine des persos féminins avance jusqu'à 15 cm devant la colonne)
+  const fit = { Jody: { st: [0, 0, 0], bd: [0.118, 0.07, 0.142], w: 1.0, drop: 0.17, front: 0.172 }, Kate: { st: [0, 0, 0], bd: [0.118, 0.07, 0.14], w: 1.0, drop: 0.17, front: 0.17 },
+    Chad: { st: [0, 0, 0], bd: [0.125, 0.066, 0.14], w: 1.12, drop: 0.22, front: 0.155 } }[n] || { st: [0, 0, 0], bd: [0.09, 0.07, 0.14], w: 1.05, drop: 0.2, front: 0.15 };
+  if (steth) attachTo(P, 'Neck', makeStethoscope({ w: fit.w, drop: fit.drop, front: fit.front }), fit.st);
+  if (badge) attachTo(P, 'Spine2', makeBadge(badge), fit.bd);
+  return P;
+}
+/** un médecin : la veste de costume devient une blouse blanche (Joe, Josh), stéthoscope autour du cou */
+export function dressDoctor(P, { steth = true } = {}) {
+  tint(P, /Suit/, [0.94, 0.95, 0.96]);
+  const fit = { Joe: { st: [0, 0.01, 0], w: 1.18 }, Josh: { st: [0, 0.01, 0], w: 1.18 } }[P.name] || { st: [0, 0.01, 0], w: 1.15 };
+  if (steth) attachTo(P, 'Neck', makeStethoscope({ w: fit.w, drop: 0.24, front: 0.152 }), fit.st);
+  return P;
+}
+/** une personne âgée : cheveux gris-blanc, gilet, lunettes */
+export function dressElder(P, { top = [0.48, 0.36, 0.46], pants = [0.25, 0.25, 0.28], hair = [0.78, 0.78, 0.77], glasses = true } = {}) {
+  tint(P, /Hair/, hair, { gray: true }); tint(P, /Shirt|Zipper|Sweater/, top); tint(P, /Pants/, pants); tint(P, /Shoes|Sneakers/, [0.22, 0.18, 0.16]);
+  if (glasses) { const gl = makeGlasses(); gl.scale.setScalar(0.92); attachTo(P, 'Head', gl, { Kate: [0, 0.074, 0.118], Jody: [0, 0.074, 0.118] }[P.name] || [0, 0.074, 0.118]); }
+  return P;
+}
